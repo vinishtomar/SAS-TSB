@@ -330,10 +330,13 @@ def add_candidate():
 @login_required
 @role_required(['Employee'])
 def my_leaves():
-    # Récupérer uniquement les congés de l'utilisateur connecté
-    leaves = LeaveRequest.query.filter_by(employee_id=current_user.id).all()
-    return render_template('main_template.html', view='employee_leaves', leaves=leaves)
-
+    employee_leaves = LeaveRequest.query.filter_by(employee_id=current_user.id).order_by(LeaveRequest.start_date.desc()).all()
+    
+    return render_template(
+        'main_template.html', 
+        view='employee_leaves', 
+        leaves=employee_leaves
+    )
 
 @app.route('/candidate/view/<int:candidate_id>', methods=['GET', 'POST'])
 @login_required
