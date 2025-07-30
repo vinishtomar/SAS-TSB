@@ -118,6 +118,8 @@ class LeaveRequest(db.Model):
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), nullable=False, default='Pending')
+    proposed_start_date = db.Column(db.Date, nullable=True)
+    proposed_end_date = db.Column(db.Date, nullable=True)
 class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
@@ -320,6 +322,15 @@ def add_candidate():
         return redirect(url_for('list_candidates'))
 
     return render_template('main_template.html', view='candidate_form', form_title="Ajouter un Candidat")
+
+@app.route('/my-leaves')
+@login_required
+@role_required(['Employee'])
+def my_leaves():
+    # Récupérer uniquement les congés de l'utilisateur connecté
+    leaves = LeaveRequest.query.filter_by(employee_id=current_user.id).all()
+    return render_template('main_template.html', view='employee_leaves', leaves=leaves)
+
 
 @app.route('/candidate/view/<int:candidate_id>', methods=['GET', 'POST'])
 @login_required
@@ -633,6 +644,29 @@ def propose_new_dates(leave_id):
         return redirect(url_for('list_leaves'))
 
     return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
+
+@app.route('/leaves/respond/<int:leave_id>', methods=['POST'])
+@login_required
+@role_required(['Employee'])
+def respond_proposal(leave_id):
+    leave = LeaveRequest.query.get_or_404(leave_id)
+    if leave.employee_id != current_user.id:
+        flash("Action non autorisée", "danger")
+        return redirect(url_for('my_leaves'))
+
+    response = request.form['response']
+    if response == 'accept':
+        leave.start_date = leave.proposed_start_date
+        leave.end_date = leave.proposed_end_date
+        leave.status = 'Pending'  # RH doit revalider
+        flash("Vous avez accepté les nouvelles dates, en attente de validation RH.", "success")
+    else:
+        leave.proposed_start_date = None
+        leave.proposed_end_date = None
+        flash("Vous avez refusé la proposition.", "warning")
+    
+    db.session.commit()
+    return redirect(url_for('my_leaves'))
 
 
 @app.route('/hebergements')
