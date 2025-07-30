@@ -351,21 +351,21 @@ def client_profile(client_id):
 # --- ROUTES "OPÉRATIONS" (Accès: CEO, Chef de projet) ---
 @app.route('/equipment')
 @login_required
-@role_required(['CEO', 'Chef de projet'])
+@role_required(['CEO', 'Chef de projet', 'Employé'])
 def list_equipment():
     equipment_list = Equipment.query.all()
     return render_template('main_template.html', view='equipment_list', equipment=equipment_list)
 
 @app.route('/chantiers')
 @login_required
-@role_required(['CEO', 'Chef de projet'])
+@role_required(['CEO', 'Chef de projet', 'Employé'])
 def list_chantiers():
     chantiers = Chantier.query.all()
     return render_template('main_template.html', view='chantiers_list', chantiers=chantiers)
 
 @app.route('/sav')
 @login_required
-@role_required(['CEO', 'Chef de projet'])
+@role_required(['CEO', 'Chef de projet', 'Employé'])
 def list_sav():
     tickets = SavTicket.query.all()
     return render_template('main_template.html', view='sav_list', tickets=tickets)
@@ -792,6 +792,7 @@ with app.app_context():
         'rh': {'password': 'password', 'role': 'RH'},
         'finance': {'password': 'password', 'role': 'Finance'},
         'chef': {'password': 'password', 'role': 'Chef de projet'},
+        'employe': {'password': 'password', 'role': 'Employé'}
     }
     for username, details in default_users.items():
         if not User.query.filter_by(username=username).first():
