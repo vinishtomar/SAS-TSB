@@ -17,6 +17,8 @@ from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
 from weasyprint import HTML
+from flask_migrate import Migrate
+
 # --- APPLICATION SETUP ---
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -28,12 +30,14 @@ login_manager.login_message_category = "info"
 app.secret_key = os.environ.get('SECRET_KEY', 'a_secure_random_secret_key_for_development')
 
 # --- DATABASE CONFIGURATION ---
-# Replace with your actual database URI
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://tsb_jilz_user:WQuuirqxSdknwZjsvldYzD0DbhcOBzQ7@dpg-d0jjegmmcj7s73836lp0-a/tsb_jilz')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL',
+    'postgresql+psycopg2://tsb_jilz_user:WQuuirqxSdknwZjsvldYzD0DbhcOBzQ7@dpg-d0jjegmmcj7s73836lp0-a.frankfurt-postgres.render.com:5432/tsb_jilz'
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-
+migrate = Migrate(app, db)
 
 # --- DATABASE MODELS ---
 
