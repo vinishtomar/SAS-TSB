@@ -19,7 +19,6 @@ from functools import wraps
 from weasyprint import HTML
 from flask_migrate import Migrate
 
-# --- APPLICATION SETUP ---
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
