@@ -9,7 +9,7 @@
         {% elif 'client' in view %}Clients
         {% elif 'equipment' in view %}Équipement
         {% elif 'quote' in view %}Devis
-        {% elif 'employee' in view %}Employés
+        {% elif 'employee' in view or 'leaves' in view %}Employés & Congés
         {% elif 'leave' in view %}Congés
         {% elif 'candidate' in view %}Recrutement
         {% elif 'chantier' in view %}Chantiers
@@ -457,6 +457,56 @@
                         </div>
                     </div>
                 </div>
+                {% elif view == 'leave_request_form' %}
+                    <h1 class="page-title">{{ form_title }}</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="POST">
+                                {# Affiche une liste déroulante pour les admins, ou le nom de l'employé sinon #}
+                                {% if employees|length > 1 %}
+                                    <div class="mb-3">
+                                        <label for="employee_id" class="form-label">Employé</label>
+                                        <select class="form-select" id="employee_id" name="employee_id" required>
+                                            <option value="" disabled selected>Sélectionner un employé...</option>
+                                            {% for emp in employees %}
+                                                <option value="{{ emp.id }}">{{ emp.full_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                {% elif employees|length == 1 %}
+                                    <input type="hidden" name="employee_id" value="{{ employees[0].id }}">
+                                    <h5>Demande pour : <strong>{{ employees[0].full_name }}</strong></h5>
+                                    <hr>
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <label for="leave_type" class="form-label">Type de Congé</label>
+                                    <select class="form-select" id="leave_type" name="leave_type">
+                                        <option value="Annual Leave">Congé Annuel</option>
+                                        <option value="Sick Leave">Arrêt Maladie</option>
+                                        <option value="Unpaid Leave">Congé sans Solde</option>
+                                        <option value="Special">Congé Exceptionnel</option>
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="start_date" class="form-label">Date de Début</label>
+                                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="end_date" class="form-label">Date de Fin</label>
+                                        <input type="date" class="form-control" id="end_date" name="end_date" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">Raison (Optionnel)</label>
+                                    <textarea class="form-control" id="reason" name="reason" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Soumettre la Demande</button>
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-light">Annuler</a>
+                            </form>
+                        </div>
+                    </div>
                 {% elif view == 'equipment_form' %}
                 <div class="page-header-mobile-stack mb-4">
                     <h1 class="page-title">Ajouter un Équipement</h1>
