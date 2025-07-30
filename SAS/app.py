@@ -112,12 +112,12 @@ class Employee(db.Model):
     hire_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
     salary = db.Column(db.Float, nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
-    leave_requests = db.relationship('LeaveRequest', backref='employee', lazy='dynamic')
+    _requests = db.relationship('Request', backref='employee', lazy='dynamic')
     hebergements = db.relationship('Hebergement', secondary=hebergement_employee_association, back_populates='employees')
-class LeaveRequest(db.Model):
+class Request(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
-    leave_type = db.Column(db.String(50), nullable=False, default='Annual Leave')
+    _type = db.Column(db.String(50), nullable=False, default='Annual ')
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), nullable=False, default='Pending')
@@ -326,18 +326,6 @@ def add_candidate():
 
     return render_template('main_template.html', view='candidate_form', form_title="Ajouter un Candidat")
 
-@app.route('/my-leaves')
-@login_required
-@role_required(['Employee'])
-def my_leaves():
-    employee_leaves = LeaveRequest.query.filter_by(employee_id=current_user.id).order_by(LeaveRequest.start_date.desc()).all()
-    
-    return render_template(
-        'main_template.html', 
-        view='employee_leaves', 
-        leaves=employee_leaves
-    )
-
 @app.route('/candidate/view/<int:candidate_id>', methods=['GET', 'POST'])
 @login_required
 @role_required(['CEO', 'RH'])
@@ -412,12 +400,6 @@ def list_employees():
     employees = Employee.query.order_by(Employee.full_name).all()
     return render_template('main_template.html', view='employees_list', employees=employees)
 
-@app.route('/leaves')
-@login_required
-@role_required(['CEO', 'RH'])
-def list_leaves():
-    leaves = LeaveRequest.query.order_by(LeaveRequest.start_date.desc()).all()
-    return render_template('main_template.html', view='leaves_list', leaves=leaves)
 
 @app.route('/candidates')
 @login_required
@@ -461,29 +443,6 @@ def add_planning_event():
 def manage_users():
     users = User.query.all()
     return render_template('main_template.html', view='users_list', users=users)
-
-@app.route('/leaves/request', methods=['GET', 'POST'])
-@login_required
-@role_required(['CEO', 'RH'])
-def request_leave():
-    if request.method == 'POST':
-        start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d').date()
-        end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%d').date()
-        if start_date > end_date:
-            flash('La date de début ne peut pas être après la date de fin.', 'danger')
-            return redirect(url_for('request_leave'))
-        new_request = LeaveRequest(
-            employee_id=request.form['employee_id'],
-            leave_type=request.form['leave_type'],
-            start_date=start_date,
-            end_date=end_date
-        )
-        db.session.add(new_request)
-        db.session.commit()
-        flash('Demande de congé soumise.', 'success')
-        return redirect(url_for('list_leaves'))
-    employees = Employee.query.all()
-    return render_template('main_template.html', view='leave_request_form', employees=employees, form_title="Demander un Congé")
 
 @app.route('/equipment/add', methods=['GET', 'POST'])
 @login_required
@@ -651,30 +610,6 @@ def propose_new_dates(leave_id):
 
     return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
 
-@app.route('/leaves/respond/<int:leave_id>', methods=['POST'])
-@login_required
-@role_required(['Employee'])
-def respond_proposal(leave_id):
-    leave = LeaveRequest.query.get_or_404(leave_id)
-    if leave.employee_id != current_user.id:
-        flash("Action non autorisée", "danger")
-        return redirect(url_for('my_leaves'))
-
-    response = request.form['response']
-    if response == 'accept':
-        leave.start_date = leave.proposed_start_date
-        leave.end_date = leave.proposed_end_date
-        leave.status = 'Pending'  # RH doit revalider
-        flash("Vous avez accepté les nouvelles dates, en attente de validation RH.", "success")
-    else:
-        leave.proposed_start_date = None
-        leave.proposed_end_date = None
-        flash("Vous avez refusé la proposition.", "warning")
-    
-    db.session.commit()
-    return redirect(url_for('my_leaves'))
-
-
 @app.route('/hebergements')
 @login_required
 @role_required(['CEO', 'RH'])
@@ -821,7 +756,110 @@ def update_leave_status(leave_id):
     flash(f"Le congé a été { 'approuvé' if new_status == 'Approved' else 'rejeté' }.", 'success')
     return redirect(url_for('list_leaves'))
 
+@app.route('/leaves')
+@login_required
+# @role_required(['admin', 'CEO']) # Décommentez si vous avez un décorateur de rôle
+def list_leaves():
+    """Affiche toutes les demandes de congé (pour les admins/CEO)."""
+    leaves = LeaveRequest.query.order_by(LeaveRequest.start_date.desc()).all()
+    return render_template('main_template.html', view='leaves_list', leaves=leaves)
 
+@app.route('/my_leaves')
+@login_required
+def my_leaves():
+    """Affiche les congés de l'employé connecté."""
+    if not current_user.employee:
+        flash("Votre compte n'est pas lié à un profil employé.", "danger")
+        return redirect(url_for('dashboard'))
+    
+    leaves = LeaveRequest.query.filter_by(employee_id=current_user.employee.id).order_by(LeaveRequest.start_date.desc()).all()
+    return render_template('main_template.html', view='employee_leaves', leaves=leaves)
+
+@app.route('/leaves/request', methods=['GET', 'POST'])
+@login_required
+def request_leave():
+    """Gère la création d'une demande de congé."""
+    if request.method == 'POST':
+        start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%d').date()
+
+        if start_date > end_date:
+            flash('La date de début ne peut pas être après la date de fin.', 'danger')
+            return redirect(url_for('request_leave'))
+
+        employee_id_to_request = request.form.get('employee_id')
+        if not employee_id_to_request and current_user.employee:
+            employee_id_to_request = current_user.employee.id
+        
+        if not employee_id_to_request:
+            flash("Impossible d'identifier l'employé pour cette demande.", "danger")
+            return redirect(url_for('dashboard'))
+
+        new_request = LeaveRequest(
+            employee_id=employee_id_to_request,
+            leave_type=request.form['leave_type'],
+            start_date=start_date,
+            end_date=end_date,
+            reason=request.form['reason']
+        )
+        db.session.add(new_request)
+        db.session.commit()
+        flash('Demande de congé soumise avec succès.', 'success')
+        
+        # Redirige vers la bonne page selon le rôle
+        if current_user.role in ['admin', 'CEO']:
+            return redirect(url_for('list_leaves'))
+        else:
+            return redirect(url_for('my_leaves'))
+
+    # Logique pour la requête GET
+    employees = []
+    if current_user.role in ['admin', 'CEO']:
+        employees = Employee.query.filter_by(is_active=True).all()
+    elif current_user.employee:
+        employees = [current_user.employee]
+    
+    return render_template('main_template.html', view='leave_request_form', employees=employees, form_title="Demander un Congé")
+
+
+@app.route('/leaves/<int:leave_id>/update_status', methods=['POST'])
+@login_required
+def update_leave_status(leave_id):
+    """Met à jour le statut d'une demande (Approuvé/Rejeté)."""
+    leave = LeaveRequest.query.get_or_404(leave_id)
+    new_status = request.form.get('status')
+
+    if new_status not in ['Approved', 'Rejected']:
+        flash('Statut invalide.', 'danger')
+        return redirect(url_for('list_leaves'))
+
+    leave.status = new_status
+    db.session.commit()
+    flash(f'La demande de congé a été {new_status.lower()}.', 'success')
+    return redirect(url_for('list_leaves'))
+
+@app.route('/leaves/respond/<int:leave_id>', methods=['POST'])
+@login_required
+def respond_proposal(leave_id):
+    """Permet à un employé de répondre à une contre-proposition de dates."""
+    leave = LeaveRequest.query.get_or_404(leave_id)
+    if not current_user.employee or leave.employee_id != current_user.employee.id:
+        flash("Action non autorisée.", "danger")
+        return redirect(url_for('dashboard'))
+
+    response = request.form['response']
+    if response == 'accept' and leave.proposed_start_date:
+        leave.start_date = leave.proposed_start_date
+        leave.end_date = leave.proposed_end_date
+        leave.status = 'Pending' # Retourne en attente de validation RH
+        flash("Vous avez accepté la proposition. La demande est de nouveau en attente de validation.", "success")
+    else:
+        leave.proposed_start_date = None
+        leave.proposed_end_date = None
+        flash("Vous avez refusé la proposition.", "warning")
+    
+    db.session.commit()
+    return redirect(url_for('my_leaves'))
 # --- DATABASE AND APP INITIALIZATION ---
 # This code now runs automatically when the app starts
 with app.app_context():
