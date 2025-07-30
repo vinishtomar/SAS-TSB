@@ -608,6 +608,31 @@ def edit_user(user_id):
         flash("Rôle mis à jour.", "success")
         return redirect(url_for('manage_users'))
     return render_template('main_template.html', view='user_edit_form', user=user)
+@app.route('/leaves/propose/<int:leave_id>', methods=['GET', 'POST'])
+@login_required
+@role_required(['CEO', 'RH'])
+def propose_new_dates(leave_id):
+    leave = LeaveRequest.query.get_or_404(leave_id)
+
+    if request.method == 'POST':
+        # Récupération des nouvelles dates
+        new_start = datetime.strptime(request.form['new_start_date'], '%Y-%m-%d').date()
+        new_end = datetime.strptime(request.form['new_end_date'], '%Y-%m-%d').date()
+
+        if new_start > new_end:
+            flash('La date de début ne peut pas être après la date de fin.', 'danger')
+            return redirect(url_for('propose_new_dates', leave_id=leave_id))
+
+        # Met à jour la demande avec les nouvelles dates et repasse en "Pending"
+        leave.start_date = new_start
+        leave.end_date = new_end
+        leave.status = 'Pending'
+        db.session.commit()
+
+        flash('Nouvelles dates proposées avec succès. La demande est repassée en attente.', 'success')
+        return redirect(url_for('list_leaves'))
+
+    return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
 
 
 @app.route('/hebergements')
