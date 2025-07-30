@@ -119,6 +119,14 @@
                     </div>
                     {% endif %}
 
+                    {% if current_user.role == 'Employee' %}
+                        <a class="nav-link {% if 'leaves' in view %}active{% endif %}" href="{{ url_for('my_leaves') }}">
+                            <i class="bi bi-calendar-check-fill"></i> Mes Congés
+                        </a>
+                        <a class="nav-link" href="#"><i class="bi bi-folder"></i> Documents</a>
+                        <a class="nav-link" href="#"><i class="bi bi-calendar3"></i> Planning</a>
+                    {% endif %}
+
                     <div class="mt-2">
                         <h3 class="nav-category-title">Autres</h3>
                         <a class="nav-link {% if 'planning' in view %}active{% endif %}"
