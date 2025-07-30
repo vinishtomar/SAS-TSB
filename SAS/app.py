@@ -17,6 +17,7 @@ from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
 from weasyprint import HTML
+from flask_migrate import Migrate, upgrade
 # --- APPLICATION SETUP ---
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -33,9 +34,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgres
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
-
-# --- DATABASE MODELS ---
+# ✅ Cette partie exécute automatiquement les migrations au démarrage sur Render
+with app.app_context():
+    upgrade()
 
 
 # --- DECORATEUR DE ROLE ---
