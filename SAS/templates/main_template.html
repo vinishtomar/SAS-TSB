@@ -37,9 +37,27 @@
                     <h3 class="card-title mt-2">TSB Manager</h3>
                 </div>
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}{% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}{% endif %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <script>
+                        // On adapte la catégorie pour l'icône (Flask "danger" -> SweetAlert "error")
+                        var iconType = '{{ category }}';
+                        if (iconType === 'danger') {
+                          iconType = 'error';
+                        }
+                
+                        Swal.fire({
+                          toast: true,                      // Affiche un petit pop-up ("toast")
+                          position: 'top-end',              // Position en haut à droite
+                          icon: iconType,                   // 'success', 'error', 'warning', 'info'
+                          title: '{{ message }}',           // Le message que vous avez défini dans flash()
+                          showConfirmButton: false,         // Pas de bouton "OK"
+                          timer: 4000,                      // Le pop-up disparaît après 4 secondes
+                          timerProgressBar: true            // Affiche une barre de progression
+                        });
+                      </script>
+                    {% endfor %}
+                  {% endif %}
                 {% endwith %}
                 <form method="POST" action="{{ url_for('login') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -1510,6 +1528,8 @@
         });
     </script>
     {% endif %}
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </body>
 
 </html>
