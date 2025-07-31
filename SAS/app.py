@@ -18,6 +18,7 @@ from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
 from weasyprint import HTML
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
