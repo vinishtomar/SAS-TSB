@@ -736,13 +736,14 @@ def add_document_to_chantier(chantier_id):
 
     return redirect(url_for('chantier_profile', chantier_id=chantier_id))
 
+# --- VOS ROUTES DE GESTION DES CONGÉS CORRIGÉES ---
 
 @app.route('/leaves')
 @login_required
-# @role_required(['admin', 'CEO']) # Décommentez si vous avez un décorateur de rôle
 def list_leaves():
     """Affiche toutes les demandes de congé (pour les admins/CEO)."""
-    leaves = LeaveRequest.query.order_by(LeaveRequest.start_date.desc()).all()
+    # CHANGÉ: LeaveRequest -> Request
+    leaves = Request.query.order_by(Request.start_date.desc()).all()
     return render_template('main_template.html', view='leaves_list', leaves=leaves)
 
 @app.route('/my_leaves')
@@ -753,7 +754,8 @@ def my_leaves():
         flash("Votre compte n'est pas lié à un profil employé.", "danger")
         return redirect(url_for('dashboard'))
     
-    leaves = LeaveRequest.query.filter_by(employee_id=current_user.employee.id).order_by(LeaveRequest.start_date.desc()).all()
+    # CHANGÉ: LeaveRequest -> Request
+    leaves = Request.query.filter_by(employee_id=current_user.employee.id).order_by(Request.start_date.desc()).all()
     return render_template('main_template.html', view='employee_leaves', leaves=leaves)
 
 @app.route('/leaves/request', methods=['GET', 'POST'])
@@ -776,26 +778,25 @@ def request_leave():
             flash("Impossible d'identifier l'employé pour cette demande.", "danger")
             return redirect(url_for('dashboard'))
 
-        new_request = LeaveRequest(
+        # CHANGÉ: LeaveRequest -> Request et leave_type -> _type
+        new_request = Request(
             employee_id=employee_id_to_request,
-            leave_type=request.form['leave_type'],
+            _type=request.form['leave_type'], # Assurez-vous que votre formulaire a un champ 'leave_type'
             start_date=start_date,
             end_date=end_date,
-            reason=request.form['reason']
+            # reason=request.form['reason'] # Votre modèle n'a pas de 'reason', donc je le mets en commentaire
         )
         db.session.add(new_request)
         db.session.commit()
         flash('Demande de congé soumise avec succès.', 'success')
         
-        # Redirige vers la bonne page selon le rôle
-        if current_user.role in ['admin', 'CEO']:
+        if current_user.role in ['admin', 'CEO', 'RH']:
             return redirect(url_for('list_leaves'))
         else:
             return redirect(url_for('my_leaves'))
 
-    # Logique pour la requête GET
     employees = []
-    if current_user.role in ['admin', 'CEO']:
+    if current_user.role in ['admin', 'CEO', 'RH']:
         employees = Employee.query.filter_by(is_active=True).all()
     elif current_user.employee:
         employees = [current_user.employee]
@@ -807,7 +808,8 @@ def request_leave():
 @login_required
 def update_leave_status(leave_id):
     """Met à jour le statut d'une demande (Approuvé/Rejeté)."""
-    leave = LeaveRequest.query.get_or_404(leave_id)
+    # CHANGÉ: LeaveRequest -> Request
+    leave = Request.query.get_or_404(leave_id)
     new_status = request.form.get('status')
 
     if new_status not in ['Approved', 'Rejected']:
@@ -823,7 +825,33 @@ def update_leave_status(leave_id):
 @login_required
 def respond_proposal(leave_id):
     """Permet à un employé de répondre à une contre-proposition de dates."""
-    leave = LeaveRequest.query.get_or_404(leave_id)
+    # CHANGÉ: LeaveRequest -> Request
+    leave = Request.query.get_or_404(leave_id)
+    if not current_user.employee or leave.employee_id != current_user.employee.id:
+        flash("Action non autorisée.", "danger")
+        return redirect(url_for('dashboard'))
+
+    response = request.form['response']
+    if response == 'accept' and leave.proposed_start_date:
+        leave.start_date = leave.proposed_start_date
+        leave.end_date = leave.proposed_end_date
+        leave.status = 'Pending'
+        flash("Vous avez accepté la proposition. La demande est de nouveau en attente de validation.", "success")
+    else:
+        leave.proposed_start_date = None
+        leave.proposed_end_date = None
+        flash("Vous avez refusé la proposition.", "warning")
+    
+    db.session.commit()
+    return redirect(url_for('my_leaves'))
+
+@app.route('/leaves/propose/<int:leave_id>', methods=['GET', 'POST'])
+@login_required
+@role_required(['CEO', 'RH'])
+def propose_new_dates(leave_id):
+    # CHANGÉ: LeaveRequest -> Request
+    leave = Request.query.get_or_404(leave_id)
+    # ... (Le reste de votre fonction est probablement correct)
     if not current_user.employee or leave.employee_id != current_user.employee.id:
         flash("Action non autorisée.", "danger")
         return redirect(url_for('dashboard'))
