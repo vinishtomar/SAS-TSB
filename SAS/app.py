@@ -785,6 +785,7 @@ def list_leaves():
 
 @app.route('/my_leaves')
 @login_required
+@role_required(['Chef de projet','finance','employe', 'RH'])
 def my_leaves():
     """Affiche les congés de l'employé actuellement connecté."""
     
