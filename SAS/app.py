@@ -442,13 +442,20 @@ def add_planning_event():
     
     return render_template('main_template.html', view='planning_form', form_title="Ajouter un Événement")
 # --- ROUTES "ADMINISTRATION" (Accès: CEO Seulement) ---
+
 @app.route('/users')
 @login_required
 @role_required(['CEO'])
 def manage_users():
     users = User.query.all()
-    return render_template('main_template.html', view='users_list', users=users)
+    
+    # 1. On récupère les IDs de tous les employés déjà liés à un compte
+    linked_employee_ids = [user.employee_id for user in users if user.employee_id]
+    
+    # 2. On récupère les employés qui ne sont PAS dans cette liste
+    unlinked_employees = Employee.query.filter(Employee.id.notin_(linked_employee_ids)).all()
 
+    return render_template('main_template.html', view='users_list', users=users, unlinked_employees=unlinked_employees)
 @app.route('/equipment/add', methods=['GET', 'POST'])
 @login_required
 @role_required(['CEO', 'Chef de projet'])
@@ -545,6 +552,7 @@ def add_facture():
 
     clients = Client.query.all()
     return render_template('main_template.html', view='facture_form', clients=clients, form_title="Nouvelle Facture")
+
 @app.route('/users/add', methods=['POST'])
 @login_required
 @role_required(['CEO'])
@@ -552,15 +560,47 @@ def add_user():
     username = request.form.get('username')
     password = request.form.get('password')
     role = request.form.get('role')
+    employee_id = request.form.get('employee_id') # On récupère l'ID de l'employé
+
     if User.query.filter_by(username=username).first():
         flash("Ce nom d'utilisateur existe déjà.", "warning")
         return redirect(url_for('manage_users'))
+        
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, password_hash=hashed_password, role=role)
+    
+    # On convertit l'ID en entier, ou on le met à None s'il est vide
+    employee_id_to_set = int(employee_id) if employee_id else None
+
+    new_user = User(username=username, password_hash=hashed_password, role=role, employee_id=employee_id_to_set)
     db.session.add(new_user)
     db.session.commit()
-    flash("Nouvel utilisateur ajouté.", "success")
+    flash("Nouvel utilisateur ajouté avec succès.", "success")
     return redirect(url_for('manage_users'))
+
+
+@app.route('/user/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+@role_required(['CEO'])
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.role == 'CEO' and current_user.id != user.id:
+        flash("Le compte CEO ne peut pas être modifié par un autre utilisateur.", "warning")
+        return redirect(url_for('manage_users'))
+
+    if request.method == 'POST':
+        user.role = request.form.get('role')
+        employee_id = request.form.get('employee_id')
+        user.employee_id = int(employee_id) if employee_id else None
+        db.session.commit()
+        flash("Utilisateur mis à jour avec succès.", "success")
+        return redirect(url_for('manage_users'))
+
+    # Pour le formulaire de modification, on doit lister tous les employés non liés,
+    # PLUS l'employé actuellement lié à cet utilisateur (s'il y en a un).
+    linked_employee_ids = [u.employee_id for u in User.query.filter(User.id != user.id, User.employee_id.isnot(None)).all()]
+    available_employees = Employee.query.filter(Employee.id.notin_(linked_employee_ids)).all()
+    
+    return render_template('main_template.html', view='user_edit_form', user=user, available_employees=available_employees)
 
 @app.route('/user/delete/<int:user_id>', methods=['POST'])
 @login_required
@@ -575,20 +615,7 @@ def delete_user(user_id):
     flash("Utilisateur supprimé.", "success")
     return redirect(url_for('manage_users'))
 
-@app.route('/user/edit/<int:user_id>', methods=['GET', 'POST'])
-@login_required
-@role_required(['CEO'])
-def edit_user(user_id):
-    user = User.query.get_or_404(user_id)
-    if user.role == 'CEO':
-        flash("Le rôle du CEO ne peut pas être modifié.", "warning")
-        return redirect(url_for('manage_users'))
-    if request.method == 'POST':
-        user.role = request.form.get('role')
-        db.session.commit()
-        flash("Rôle mis à jour.", "success")
-        return redirect(url_for('manage_users'))
-    return render_template('main_template.html', view='user_edit_form', user=user)
+
 @app.route('/leaves/propose/<int:leave_id>', methods=['GET', 'POST'])
 @login_required
 @role_required(['CEO', 'RH'])
