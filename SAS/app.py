@@ -620,7 +620,7 @@ def delete_user(user_id):
 @login_required
 @role_required(['CEO', 'RH'])
 def propose_new_dates(leave_id):
-    leave = LeaveRequest.query.get_or_404(leave_id)
+    leave = Request.query.get_or_404(leave_id)
 
     if request.method == 'POST':
         # Récupération des nouvelles dates
