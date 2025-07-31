@@ -1143,22 +1143,37 @@
                 <div class="card mb-4">
                     <div class="card-header">Ajouter un nouvel utilisateur</div>
                     <div class="card-body">
-                        <form action="{{ url_for('add_user') }}" method="POST" class="row g-3">
+                        <form action="{{ url_for('add_user') }}" method="POST" class="row g-3 align-items-end">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="col-md-4"><label for="username" class="form-label">Nom
-                                    d'utilisateur</label><input type="text" class="form-control" name="username"
-                                    id="username" required></div>
-                            <div class="col-md-4"><label for="password" class="form-label">Mot de passe</label><input
-                                    type="password" class="form-control" name="password" id="password" required></div>
-                            <div class="col-md-3"><label for="role" class="form-label">Rôle</label><select name="role"
-                                    id="role" class="form-select" required>
+                            <div class="col-md-3">
+                                <label for="username" class="form-label">Nom d'utilisateur</label>
+                                <input type="text" class="form-control" name="username" id="username" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="password" class="form-label">Mot de passe</label>
+                                <input type="password" class="form-control" name="password" id="password" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="role" class="form-label">Rôle</label>
+                                <select name="role" id="role" class="form-select" required>
+                                    <option value="Employé">Employé</option>
                                     <option value="Chef de projet">Chef de projet</option>
                                     <option value="RH">RH</option>
                                     <option value="Finance">Finance</option>
-                                    <option value="CEO">CEO</option>
-                                </select></div>
-                            <div class="col-md-1 d-flex align-items-end"><button type="submit"
-                                    class="btn btn-primary w-100">Ajouter</button></div>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="employee_id" class="form-label">Lier à l'employé (Optionnel)</label>
+                                <select name="employee_id" id="employee_id" class="form-select">
+                                    <option value="">-- Non lié --</option>
+                                    {% for employee in unlinked_employees %}
+                                    <option value="{{ employee.id }}">{{ employee.full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-primary w-100">Ajouter</button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -1241,28 +1256,38 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-body">
-                        <form method="POST">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="mb-3">
-                                <label class="form-label">Nom d'utilisateur</label>
-                                <input type="text" class="form-control" value="{{ user.username }}" readonly disabled>
-                            </div>
-                            <div class="mb-3">
-                                <label for="role" class="form-label">Rôle</label>
-                                <select name="role" id="role" class="form-select" required>
-                                    <option value="Chef de projet" {% if user.role=='Chef de projet' %}selected{% endif
-                                        %}>Chef de projet</option>
-                                    <option value="RH" {% if user.role=='RH' %}selected{% endif %}>RH</option>
-                                    <option value="Finance" {% if user.role=='Finance' %}selected{% endif %}>Finance
-                                    </option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-                            <a href="{{ url_for('manage_users') }}" class="btn btn-light">Annuler</a>
-                        </form>
-                    </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" value="{{ user.username }}" readonly disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Rôle</label>
+                            <select name="role" id="role" class="form-select" required>
+                                <option value="Employé" {% if user.role=='Employé' %}selected{% endif %}>Employé</option>
+                                <option value="Chef de projet" {% if user.role=='Chef de projet' %}selected{% endif %}>Chef de projet</option>
+                                <option value="RH" {% if user.role=='RH' %}selected{% endif %}>RH</option>
+                                <option value="Finance" {% if user.role=='Finance' %}selected{% endif %}>Finance</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="employee_id" class="form-label">Employé Lié</label>
+                            <select name="employee_id" id="employee_id" class="form-select">
+                                <option value="">-- Aucun --</option>
+                                {% for employee in available_employees %}
+                                <option value="{{ employee.id }}" {% if user.employee_id == employee.id %}selected{% endif %}>
+                                    {{ employee.full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                        <a href="{{ url_for('manage_users') }}" class="btn btn-light">Annuler</a>
+                    </form>
                 </div>
+            </div>
                 {% elif view == 'document_form' %}
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1 class="page-title mb-0">Ajouter un document</h1>
