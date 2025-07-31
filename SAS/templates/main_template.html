@@ -1516,31 +1516,31 @@
 
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <script>
-                    // On adapte la catégorie pour l'icône (Flask "danger" -> SweetAlert "error")
-                    var iconType = '{{ category }}';
-                    if (iconType === 'danger') {
-                        iconType = 'error';
-                    }
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {# On vérifie d'abord s'il y a des messages à afficher #}
+    {% if messages %}
+        {# On boucle sur chaque message pour créer un script de pop-up #}
+        {% for category, message in messages %}
+            <script>
+                var iconType = '{{ category }}';
+                if (iconType === 'danger') {
+                    iconType = 'error';
+                }
 
-                    // On affiche le pop-up !
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: iconType,
-                        title: '{{ message }}',
-                        showConfirmButton: false,
-                        timer: 3500,
-                        timerProgressBar: true
-                    });
-                </script>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: iconType,
+                    title: '{{ message }}',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true
+                });
+            </script>
+        {% endfor %}
+    {# IMPORTANT : C'est la balise qui ferme le "if messages" #}
+    {% endif %}
+{% endwith %}
     </body>
 </html>
     </body>
