@@ -770,6 +770,7 @@
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <button type="submit" name="status" value="Rejected" class="btn btn-sm btn-danger">Rejeter</button>
                                                 </form>
+                                                <a href="{{ url_for('propose_new_dates', leave_id=leave.id) }}" class="btn btn-sm btn-warning">Proposer</a>
                                             {% else %}
                                                 -
                                             {% endif %}
