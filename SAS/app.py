@@ -799,7 +799,13 @@ def my_leaves():
     
     # Affiche la page avec la liste de ses congés
     return render_template('main_template.html', view='employee_leaves', leaves=leaves)
-  
+
+print("Employee ID:", employee_id_to_request)
+print("Leave type:", request.form.get('leave_type'))
+print("Start date:", start_date)
+print("End date:", end_date)
+
+
 @app.route('/leaves/request', methods=['GET', 'POST'])
 @login_required
 def request_leave():
