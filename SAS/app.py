@@ -837,17 +837,14 @@ def request_leave():
         else:
             return redirect(url_for('my_leaves'))
 
-    employees = []
-    if current_user.role in ['admin', 'CEO', 'RH']:
-        employees = Employee.query.filter_by(is_active=True).all()
-    elif current_user.employee:
-        employees = [current_user.employee]
+    employees = Employee.query.filter_by(is_active=True).all()
     
     return render_template('main_template.html', view='leave_request_form', employees=employees, form_title="Demander un Congé")
 
 
 @app.route('/leaves/<int:leave_id>/update_status', methods=['POST'])
 @login_required
+@role_required(['CEO', 'RH'])
 def update_leave_status(leave_id):
     """Met à jour le statut d'une demande (Approuvé/Rejeté)."""
     # CHANGÉ: LeaveRequest -> Request
