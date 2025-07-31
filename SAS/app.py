@@ -775,6 +775,7 @@ def link_user_employee():
 
 @app.route('/leaves')
 @login_required
+@role_required(['CEO', 'RH'])
 def list_leaves():
     """Affiche toutes les demandes de congé (pour les admins/CEO)."""
     # CHANGÉ: LeaveRequest -> Request
