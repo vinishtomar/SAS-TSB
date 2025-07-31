@@ -798,7 +798,6 @@ def my_leaves():
     
     # Affiche la page avec la liste de ses congés
     return render_template('main_template.html', view='employee_leaves', leaves=leaves)
-
 @app.route('/leaves/request', methods=['GET', 'POST'])
 @login_required
 def request_leave():
@@ -808,7 +807,7 @@ def request_leave():
         end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%d').date()
 
         if start_date > end_date:
-            flash('La date de début ne peut pas être après la date de fin.', 'danger')
+            flash('❌ La date de début ne peut pas être après la date de fin.', 'danger')
             return redirect(url_for('request_leave'))
 
         employee_id_to_request = request.form.get('employee_id')
@@ -816,34 +815,36 @@ def request_leave():
             employee_id_to_request = current_user.employee.id
         
         if not employee_id_to_request:
-            flash("Impossible d'identifier l'employé pour cette demande.", "danger")
+            flash("❌ Impossible d'identifier l'employé pour cette demande.", "danger")
             return redirect(url_for('dashboard'))
 
-        # >>> DEBUG print ici
+        # DEBUG
         print("Employee ID:", employee_id_to_request)
-        print("Leave type:", request.form.get('leave_type'))
-        print("Start date:", start_date)
-        print("End date:", end_date)
-      
-        # CHANGÉ: LeaveRequest -> Request et leave_type -> _type
+
+        # Création de la demande
         new_request = Request(
             employee_id=employee_id_to_request,
-            _type=request.form['leave_type'], # Assurez-vous que votre formulaire a un champ 'leave_type'
+            _type=request.form['leave_type'],
             start_date=start_date,
-            end_date=end_date,
-            # reason=request.form['reason'] # Votre modèle n'a pas de 'reason', donc je le mets en commentaire
+            end_date=end_date
         )
         db.session.add(new_request)
         db.session.commit()
-        flash('Demande de congé soumise avec succès.', 'success')
-        
-        if current_user.role in ['admin', 'CEO', 'RH']:
-            return redirect(url_for('list_leaves'))
-        else:
-            return redirect(url_for('my_leaves'))
 
+        # ✅ Message confirmation
+        flash('✅ Votre demande de congé a été envoyée et est en attente de validation par le service RH.', 'success')
+
+        # ✅ Rester sur la page formulaire au lieu d’une redirection vers une page interdite
+        employees = Employee.query.filter_by(is_active=True).all()
+        return render_template(
+            'main_template.html',
+            view='leave_request_form',
+            employees=employees,
+            form_title="Demander un Congé"
+        )
+
+    # GET → Afficher formulaire
     employees = Employee.query.filter_by(is_active=True).all()
-    
     return render_template('main_template.html', view='leave_request_form', employees=employees, form_title="Demander un Congé")
 
 
