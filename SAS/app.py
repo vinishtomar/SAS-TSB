@@ -742,6 +742,37 @@ def add_document_to_chantier(chantier_id):
 
 # --- VOS ROUTES DE GESTION DES CONGÉS CORRIGÉES ---
 
+@app.route('/link-user-employee')
+@login_required
+@role_required(['CEO']) # Sécurité : Seul le CEO peut visiter cette page
+def link_user_employee():
+    """
+    Route temporaire pour lier un utilisateur à un employé.
+    À supprimer après utilisation.
+    """
+    # --- MODIFIEZ CES VALEURS ---
+    username_to_link = 'employe'
+    employee_full_name = 'Nom Complet de l\'Employé' # <-- Mettez le nom exact de l'employé ici
+    # ---------------------------
+
+    user = User.query.filter_by(username=username_to_link).first()
+    employee = Employee.query.filter_by(full_name=employee_full_name).first()
+
+    if not user:
+        flash(f"Utilisateur '{username_to_link}' non trouvé.", 'danger')
+        return redirect(url_for('dashboard'))
+    
+    if not employee:
+        flash(f"Employé '{employee_full_name}' non trouvé.", 'danger')
+        return redirect(url_for('dashboard'))
+
+    # On fait la liaison
+    user.employee_id = employee.id
+    db.session.commit()
+
+    flash(f"L'utilisateur '{user.username}' a été lié avec succès à l'employé '{employee.full_name}'.", 'success')
+    return redirect(url_for('dashboard'))
+
 @app.route('/leaves')
 @login_required
 def list_leaves():
@@ -753,15 +784,19 @@ def list_leaves():
 @app.route('/my_leaves')
 @login_required
 def my_leaves():
-    """Affiche les congés de l'employé connecté."""
+    """Affiche les congés de l'employé actuellement connecté."""
+    
+    # Vérifie que le compte utilisateur est bien lié à un profil employé
     if not current_user.employee:
-        flash("Votre compte n'est pas lié à un profil employé.", "danger")
+        flash("Votre compte utilisateur n'est pas lié à un profil employé.", "danger")
         return redirect(url_for('dashboard'))
     
-    # CHANGÉ: LeaveRequest -> Request
-    leaves = Request.query.filter_by(employee_id=current_user.employee.id).order_by(Request.start_date.desc()).all()
+    # Récupère les congés UNIQUEMENT pour cet employé
+    leaves = LeaveRequest.query.filter_by(employee_id=current_user.employee.id).order_by(LeaveRequest.start_date.desc()).all()
+    
+    # Affiche la page avec la liste de ses congés
     return render_template('main_template.html', view='employee_leaves', leaves=leaves)
-
+  
 @app.route('/leaves/request', methods=['GET', 'POST'])
 @login_required
 def request_leave():
