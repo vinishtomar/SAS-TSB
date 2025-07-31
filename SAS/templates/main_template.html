@@ -42,6 +42,7 @@
                 {% endfor %}{% endif %}
                 {% endwith %}
                 <form method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
                         <input type="text" class="form-control" id="username" name="username" required>
@@ -275,6 +276,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="employee_ids" class="form-label">Employé(s) concerné(s)</label>
                                 <small class="form-text text-muted d-block mb-2">Maintenez la touche Ctrl (ou Cmd sur
@@ -391,6 +393,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3"><label for="name" class="form-label">Nom Complet</label><input type="text"
                                     class="form-control" id="name" name="name"
                                     value="{{ client.name if client else '' }}" required></div>
@@ -526,6 +529,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('add_equipment') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="row">
                                 <div class="col-md-6 mb-3"><label for="name" class="form-label">Nom</label><input
                                         type="text" class="form-control" id="name" name="name" required></div>
@@ -603,6 +607,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="row">
                                 <div class="col-md-6 mb-3"><label for="client_id"
                                         class="form-label">Client</label><select class="form-select" id="client_id"
@@ -680,6 +685,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="row">
                                 <div class="col-md-6 mb-3"><label for="full_name" class="form-label">Nom
                                         Complet</label><input type="text" class="form-control" id="full_name"
@@ -780,6 +786,7 @@
                             <p>Proposition de nouvelles dates pour <strong>{{ leave.employee.full_name }}</strong></p>
                     
                             <form action="{{ url_for('propose_new_dates', leave_id=leave.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="mb-3">
                                     <label for="new_start_date" class="form-label">Nouvelle Date de Début</label>
                                     <input type="date" name="new_start_date" class="form-control" required>
@@ -799,8 +806,8 @@
                 </div>
                 <div class="card">
                     <div class="card-body">
-                        <form method="POST">
-                            input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <form method="POST"> 
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3"><label for="employee_id" class="form-label">Employé</label><select
                                     class="form-select" id="employee_id" name="employee_id" required>
                                     <option value="">Sélectionner un employé...</option>{% for employee in employees %}
@@ -891,6 +898,7 @@
                             <div class="card-header">Gérer le Statut</div>
                             <div class="card-body">
                                 <form method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <div class="mb-3"><label for="status" class="form-label">Étape du
                                             recrutement</label><select class="form-select" id="status" name="status">{%
                                             set statuses = ['Applied', 'Shortlisted', 'Interview', 'Offer', 'Hired',
@@ -918,6 +926,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="row">
                                 <div class="col-md-6 mb-3"><label for="full_name" class="form-label">Nom
                                         Complet</label><input type="text" class="form-control" id="full_name"
@@ -1066,6 +1075,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="client_id" class="form-label">Client</label>
                                 <select name="client_id" id="client_id" class="form-select" required>
@@ -1090,6 +1100,7 @@
 <div class="card">
     <div class="card-body">
         <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
                 <label for="client_id" class="form-label">Client</label>
                 <select name="client_id" id="client_id" class="form-select" required>
@@ -1128,6 +1139,7 @@
                     <div class="card-header">Ajouter un nouvel utilisateur</div>
                     <div class="card-body">
                         <form action="{{ url_for('add_user') }}" method="POST" class="row g-3">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="col-md-4"><label for="username" class="form-label">Nom
                                     d'utilisateur</label><input type="text" class="form-control" name="username"
                                     id="username" required></div>
@@ -1192,6 +1204,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="title" class="form-label">Titre de l'événement</label>
                                 <input type="text" class="form-control" name="title" id="title" required>
@@ -1225,6 +1238,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label class="form-label">Nom d'utilisateur</label>
                                 <input type="text" class="form-control" value="{{ user.username }}" readonly disabled>
@@ -1251,6 +1265,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="filename" class="form-label">Nom du fichier</label>
                                 <input type="text" class="form-control" name="filename" id="filename"
@@ -1304,9 +1319,11 @@
                                     <td>
                                         {% if leave.status == 'Rejected' and leave.proposed_start_date %}
                                             <form action="{{ url_for('respond_proposal', leave_id=leave.id) }}" method="POST" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button name="response" value="accept" class="btn btn-sm btn-success">Accepter</button>
                                             </form>
                                             <form action="{{ url_for('respond_proposal', leave_id=leave.id) }}" method="POST" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button name="response" value="decline" class="btn btn-sm btn-danger">Refuser</button>
                                             </form>
                                         {% else %}
@@ -1386,6 +1403,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="name" class="form-label">Nom du Chantier</label>
                                 <input type="text" class="form-control" name="name" id="name" required>
@@ -1466,6 +1484,7 @@
                             <div class="card-body">
                                 <form action="{{ url_for('add_document_to_chantier', chantier_id=chantier.id) }}"
                                     method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <h6 class="card-title">Lier un nouveau document/lien</h6>
                                     <div class="row">
                                         <div class="col-md-6 mb-2">
