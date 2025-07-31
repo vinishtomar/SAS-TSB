@@ -6,3 +6,4 @@ WeasyPrint
 gunicorn
 psycopg2
 Flask-Migrate
+Flask-WTF
