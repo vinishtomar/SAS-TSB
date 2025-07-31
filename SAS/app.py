@@ -845,30 +845,7 @@ def respond_proposal(leave_id):
     db.session.commit()
     return redirect(url_for('my_leaves'))
 
-@app.route('/leaves/propose/<int:leave_id>', methods=['GET', 'POST'])
-@login_required
-@role_required(['CEO', 'RH'])
-def propose_new_dates(leave_id):
-    # CHANGÉ: LeaveRequest -> Request
-    leave = Request.query.get_or_404(leave_id)
-    # ... (Le reste de votre fonction est probablement correct)
-    if not current_user.employee or leave.employee_id != current_user.employee.id:
-        flash("Action non autorisée.", "danger")
-        return redirect(url_for('dashboard'))
 
-    response = request.form['response']
-    if response == 'accept' and leave.proposed_start_date:
-        leave.start_date = leave.proposed_start_date
-        leave.end_date = leave.proposed_end_date
-        leave.status = 'Pending' # Retourne en attente de validation RH
-        flash("Vous avez accepté la proposition. La demande est de nouveau en attente de validation.", "success")
-    else:
-        leave.proposed_start_date = None
-        leave.proposed_end_date = None
-        flash("Vous avez refusé la proposition.", "warning")
-    
-    db.session.commit()
-    return redirect(url_for('my_leaves'))
 # --- DATABASE AND APP INITIALIZATION ---
 # This code now runs automatically when the app starts
 with app.app_context():
