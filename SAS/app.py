@@ -884,7 +884,7 @@ def respond_proposal(leave_id):
     db.session.commit()
     return redirect(url_for('my_leaves'))
 
-
+"""
 # --- DATABASE AND APP INITIALIZATION ---
 # This code now runs automatically when the app starts
 with app.app_context():
@@ -903,7 +903,7 @@ with app.app_context():
             db.session.add(User(username=username, password_hash=hashed_password, role=details['role']))
     db.session.commit()
     print("--- Base de données prête. ---")
-
+"""
 # This block only runs for local development
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
