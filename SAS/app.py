@@ -62,9 +62,13 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(120), nullable=False)
     role = db.Column(db.String(50), nullable=False, default="user")
-    # LIGNE À AJOUTER :
+    
+    # --- C'est la relation cruciale qui manque ---
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
+    employee = db.relationship('Employee', backref='user', uselist=False, lazy='joined')
+    
+    # Relation vers les documents (déjà présente dans votre code)
     documents = db.relationship('Document', backref='owner', lazy=True)
-# ... etc pour tous vos modèles ...
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
