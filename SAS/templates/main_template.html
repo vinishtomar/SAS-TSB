@@ -140,18 +140,17 @@
                             Utilisateurs</a>
                         {% endif %}
                     </div>
-                        {# --- LIENS VISIBLES PAR LES EMPLOYÉS --- #}
-                        {% if current_user.role not in ['admin', 'CEO'] %}
-                            <a class="nav-link {% if view == 'employee_leaves' %}active{% endif %}" href="{{ url_for('my_leaves') }}"><i class="bi bi-calendar-check-fill"></i> Mes Congés</a>
-                        {% endif %}
-                
                         {# --- LIEN DE DEMANDE DE CONGÉ (POUR TOUS SAUF CEO) --- #}
                         {% if current_user.role != 'CEO' %}
                             <a class="nav-link {% if view == 'leave_request_form' %}active{% endif %}" href="{{ url_for('request_leave') }}">
                                 <i class="bi bi-calendar-plus"></i> Demande Congé
                             </a>
                         {% endif %}
-
+                        {% if current_user.role not in ['admin', 'CEO'] %}
+                            <a class="nav-link" href="{{ url_for('my_leaves') }}">
+                                <i class="bi bi-calendar-check-fill"></i> Mes Congés
+                            </a>
+                        {% endif %}
                 </div>
             </nav>
 
