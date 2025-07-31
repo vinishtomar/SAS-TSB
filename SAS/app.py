@@ -795,7 +795,7 @@ def my_leaves():
         return redirect(url_for('dashboard'))
     
     # Récupère les congés UNIQUEMENT pour cet employé
-    leaves = LeaveRequest.query.filter_by(employee_id=current_user.employee.id).order_by(LeaveRequest.start_date.desc()).all()
+    leaves = Request.query.filter_by(employee_id=current_user.employee.id).order_by(LeaveRequest.start_date.desc()).all()
     
     # Affiche la page avec la liste de ses congés
     return render_template('main_template.html', view='employee_leaves', leaves=leaves)
