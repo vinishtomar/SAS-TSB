@@ -114,7 +114,7 @@ class Employee(db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     _requests = db.relationship('Request', backref='employee', lazy='dynamic')
     hebergements = db.relationship('Hebergement', secondary=hebergement_employee_association, back_populates='employees')
-class LeaveRequest(db.Model):
+class Request(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     _type = db.Column(db.String(50), nullable=False, default='Annual ')
