@@ -74,13 +74,14 @@
 
             <nav class="nav">
                 <div class="nav-scroll-content">
-
+            
                     {% if current_user.role == 'CEO' %}
                     <a class="nav-link {% if view == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
                         <i class="bi bi-house-door-fill"></i> Dashboard
                     </a>
                     {% endif %}
-
+            
+                    {# --- SECTION RH --- #}
                     {% if current_user.role in ['CEO', 'RH'] %}
                     <div class="mt-2">
                         <h3 class="nav-category-title">RH</h3>
@@ -88,16 +89,16 @@
                             href="{{ url_for('list_clients') }}"><i class="bi bi-person-check-fill"></i> Clients</a>
                         <a class="nav-link {% if 'employee' in view %}active{% endif %}"
                             href="{{ url_for('list_employees') }}"><i class="bi bi-people-fill"></i> Employés</a>
-                        <a class="nav-link {% if 'leave' in view %}active{% endif %}"
-                            href="{{ url_for('list_leaves') }}"><i class="bi bi-calendar-check-fill"></i> Congés</a>
+                        <a class="nav-link {% if view == 'leaves_list' %}active{% endif %}"
+                            href="{{ url_for('list_leaves') }}"><i class="bi bi-calendar-check-fill"></i> Congés (Admin)</a>
                         <a class="nav-link {% if 'hebergement' in view %}active{% endif %}"
                             href="{{ url_for('list_hebergements') }}"><i class="bi bi-building"></i> Hébergement</a>
                         <a class="nav-link {% if 'candidate' in view %}active{% endif %}"
-                            href="{{ url_for('list_candidates') }}"><i class="bi bi-person-plus-fill"></i>
-                            Recrutement</a>
+                            href="{{ url_for('list_candidates') }}"><i class="bi bi-person-plus-fill"></i> Recrutement</a>
                     </div>
                     {% endif %}
-
+            
+                    {# --- SECTION OPÉRATIONS --- #}
                     {% if current_user.role in ['CEO', 'Chef de projet'] %}
                     <div class="mt-2">
                         <h3 class="nav-category-title">Opérations</h3>
@@ -109,7 +110,8 @@
                                 class="bi bi-headphones"></i> SAV</a>
                     </div>
                     {% endif %}
-
+            
+                    {# --- SECTION FINANCES --- #}
                     {% if current_user.role in ['CEO', 'Finance'] %}
                     <div class="mt-2">
                         <h3 class="nav-category-title">Finances</h3>
@@ -119,39 +121,32 @@
                             href="{{ url_for('list_factures') }}"><i class="bi bi-credit-card"></i> Factures</a>
                     </div>
                     {% endif %}
-
-                    {% if current_user.role == 'Employee' %}
-                        <a class="nav-link {% if 'leaves' in view %}active{% endif %}" href="{{ url_for('my_leaves') }}">
-                            <i class="bi bi-calendar-check-fill"></i> Mes Congés
-                        </a>
-                        <a class="nav-link" href="#"><i class="bi bi-folder"></i> Documents</a>
-                        <a class="nav-link" href="#"><i class="bi bi-calendar3"></i> Planning</a>
-                    {% endif %}
-
+            
+                    {# --- SECTION AUTRES & EMPLOYÉS --- #}
                     <div class="mt-2">
                         <h3 class="nav-category-title">Autres</h3>
                         <a class="nav-link {% if 'planning' in view %}active{% endif %}"
                             href="{{ url_for('list_planning') }}"><i class="bi bi-map-fill"></i> Planning</a>
                         <a class="nav-link {% if 'document' in view %}active{% endif %}"
                             href="{{ url_for('list_documents') }}"><i class="bi bi-folder-fill"></i> Documents</a>
-
+                        
+                        {% if current_user.role not in ['CEO', 'RH'] %}
+                        <a class="nav-link {% if view == 'employee_leaves' %}active{% endif %}" href="{{ url_for('my_leaves') }}">
+                            <i class="bi bi-calendar-check-fill"></i> Mes Congés
+                        </a>
+                        {% endif %}
+            
+                        {% if current_user.role != 'CEO' %}
+                        <a class="nav-link {% if view == 'leave_request_form' %}active{% endif %}" href="{{ url_for('request_leave') }}">
+                            <i class="bi bi-calendar-plus"></i> Demande Congé
+                        </a>
+                        {% endif %}
+            
                         {% if current_user.role == 'CEO' %}
                         <a class="nav-link {% if 'users' in view %}active{% endif %}"
-                            href="{{ url_for('manage_users') }}"><i class="bi bi-person-gear"></i> Gestion
-                            Utilisateurs</a>
+                            href="{{ url_for('manage_users') }}"><i class="bi bi-person-gear"></i> Gestion Utilisateurs</a>
                         {% endif %}
                     </div>
-                        {# --- LIEN DE DEMANDE DE CONGÉ (POUR TOUS SAUF CEO) --- #}
-                        {% if current_user.role != 'CEO' %}
-                            <a class="nav-link {% if view == 'leave_request_form' %}active{% endif %}" href="{{ url_for('request_leave') }}">
-                                <i class="bi bi-calendar-plus"></i> Demande Congé
-                            </a>
-                        {% endif %}
-                        {% if current_user.role not in ['admin', 'CEO'] %}
-                            <a class="nav-link" href="{{ url_for('my_leaves') }}">
-                                <i class="bi bi-calendar-check-fill"></i> Mes Congés
-                            </a>
-                        {% endif %}
                 </div>
             </nav>
 
