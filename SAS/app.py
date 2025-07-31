@@ -37,7 +37,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
+csrf = CSRFProtect(app)
 # --- DATABASE MODELS ---
 
 
