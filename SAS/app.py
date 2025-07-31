@@ -826,6 +826,12 @@ def request_leave():
             flash("Impossible d'identifier l'employé pour cette demande.", "danger")
             return redirect(url_for('dashboard'))
 
+        # >>> DEBUG print ici
+        print("Employee ID:", employee_id_to_request)
+        print("Leave type:", request.form.get('leave_type'))
+        print("Start date:", start_date)
+        print("End date:", end_date)
+      
         # CHANGÉ: LeaveRequest -> Request et leave_type -> _type
         new_request = Request(
             employee_id=employee_id_to_request,
