@@ -870,7 +870,6 @@ def update_leave_status(leave_id):
 @login_required
 def respond_proposal(leave_id):
     """Permet à un employé de répondre à une contre-proposition de dates."""
-    # CHANGÉ: LeaveRequest -> Request
     leave = Request.query.get_or_404(leave_id)
     if not current_user.employee or leave.employee_id != current_user.employee.id:
         flash("Action non autorisée.", "danger")
@@ -880,12 +879,17 @@ def respond_proposal(leave_id):
     if response == 'accept' and leave.proposed_start_date:
         leave.start_date = leave.proposed_start_date
         leave.end_date = leave.proposed_end_date
-        leave.status = 'Pending'
+        leave.status = 'Pending' # Repasse en attente pour validation finale
+        leave.proposed_start_date = None # On nettoie la proposition
+        leave.proposed_end_date = None   # On nettoie la proposition
         flash("Vous avez accepté la proposition. La demande est de nouveau en attente de validation.", "success")
-    else:
+    
+    # AMÉLIORATION ICI 👇
+    elif response == 'decline':
         leave.proposed_start_date = None
         leave.proposed_end_date = None
-        flash("Vous avez refusé la proposition.", "warning")
+        # Le statut ne change pas, il reste en attente de la décision des RH
+        flash("Vous avez refusé la contre-proposition. La demande reste en attente sur vos dates initiales.", "info")
     
     db.session.commit()
     return redirect(url_for('my_leaves'))
