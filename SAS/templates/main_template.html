@@ -472,21 +472,14 @@
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                                 {# Affiche une liste déroulante pour les admins, ou le nom de l'employé sinon #}
-                                {% if employees|length > 1 %}
-                                    <div class="mb-3">
-                                        <label for="employee_id" class="form-label">Employé</label>
-                                        <select class="form-select" id="employee_id" name="employee_id" required>
-                                            <option value="" disabled selected>Sélectionner un employé...</option>
-                                            {% for emp in employees %}
-                                                <option value="{{ emp.id }}">{{ emp.full_name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                {% elif employees|length == 1 %}
-                                    <input type="hidden" name="employee_id" value="{{ employees[0].id }}">
-                                    <h5>Demande pour : <strong>{{ employees[0].full_name }}</strong></h5>
-                                    <hr>
-                                {% endif %}
+                                <div class="mb-3">
+                                    <label for="employee_id" class="form-label">Employé</label>
+                                    <select class="form-select" id="employee_id" name="employee_id" required>
+                                        {% for emp in employees %}
+                                            <option value="{{ emp.id }}">{{ emp.full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
 
                                 <div class="mb-3">
                                     <label for="leave_type" class="form-label">Type de Congé</label>
