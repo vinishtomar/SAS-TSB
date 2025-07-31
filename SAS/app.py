@@ -807,7 +807,7 @@ def request_leave():
         end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%d').date()
 
         if start_date > end_date:
-            flash('La date de début ne peut pas être après la date de fin.', 'danger')
+            flash('❌ La date de début ne peut pas être après la date de fin.', 'danger')
             return redirect(url_for('request_leave'))
 
         employee_id_to_request = request.form.get('employee_id')
@@ -815,8 +815,11 @@ def request_leave():
             employee_id_to_request = current_user.employee.id
         
         if not employee_id_to_request:
-            flash("Impossible d'identifier l'employé pour cette demande.", "danger")
+            flash("❌ Impossible d'identifier l'employé pour cette demande.", "danger")
             return redirect(url_for('dashboard'))
+
+        # DEBUG
+        print("Employee ID:", employee_id_to_request)
 
         # Création de la demande
         new_request = Request(
@@ -828,20 +831,22 @@ def request_leave():
         db.session.add(new_request)
         db.session.commit()
 
-        # ✅ C'est ici que la magie opère : on "flashe" le message...
-        flash('Votre demande de congé a été envoyée avec succès.', 'success')
+        # ✅ Message confirmation
+        flash('✅ Votre demande de congé a été envoyée et est en attente de validation par le service RH.', 'success')
 
-        # ✅ ...puis on redirige l'utilisateur.
-        # S'il est admin/RH, on le renvoie vers la liste globale.
-        if current_user.role in ['CEO', 'RH']:
-            return redirect(url_for('list_leaves'))
-        # Sinon, on le renvoie vers la page de ses propres congés.
-        else:
-            return redirect(url_for('my_leaves'))
+        # ✅ Rester sur la page formulaire au lieu d’une redirection vers une page interdite
+        employees = Employee.query.filter_by(is_active=True).all()
+        return render_template(
+            'main_template.html',
+            view='leave_request_form',
+            employees=employees,
+            form_title="Demander un Congé"
+        )
 
-    # Si la méthode est GET, on affiche simplement le formulaire.
+    # GET → Afficher formulaire
     employees = Employee.query.filter_by(is_active=True).all()
     return render_template('main_template.html', view='leave_request_form', employees=employees, form_title="Demander un Congé")
+
 
 @app.route('/leaves/<int:leave_id>/update_status', methods=['POST'])
 @login_required
