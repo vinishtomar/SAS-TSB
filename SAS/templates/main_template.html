@@ -1404,7 +1404,7 @@
                             </div>
                         </div>
                     </div>
-
+                    {% endif %}
                     {% if current_user.role == 'Chef de projet' %}
                     <div class="col-md-4 mb-3">
                         <div class="card h-100">
@@ -1553,7 +1553,8 @@
             </div>
         </main>
     </div>
- {% endif %}
+{% endif %}
+ 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -1568,7 +1569,7 @@
         });
     </script>
    
-        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
 
