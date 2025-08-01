@@ -616,31 +616,6 @@ def delete_user(user_id):
     return redirect(url_for('manage_users'))
 
 
-@app.route('/leaves/propose/<int:leave_id>', methods=['GET', 'POST'])
-@login_required
-@role_required(['CEO', 'RH'])
-def propose_new_dates(leave_id):
-    leave = Request.query.get_or_404(leave_id)
-
-    if request.method == 'POST':
-        # Récupération des nouvelles dates
-        new_start = datetime.strptime(request.form['new_start_date'], '%Y-%m-%d').date()
-        new_end = datetime.strptime(request.form['new_end_date'], '%Y-%m-%d').date()
-
-        if new_start > new_end:
-            flash('La date de début ne peut pas être après la date de fin.', 'danger')
-            return redirect(url_for('propose_new_dates', leave_id=leave_id))
-
-        # Met à jour la demande avec les nouvelles dates et repasse en "Pending"
-        leave.start_date = new_start
-        leave.end_date = new_end
-        leave.status = 'Pending'
-        db.session.commit()
-
-        flash('Nouvelles dates proposées avec succès. La demande est repassée en attente.', 'success')
-        return redirect(url_for('list_leaves'))
-
-    return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
 
 @app.route('/hebergements')
 @login_required
@@ -893,6 +868,32 @@ def update_leave_status(leave_id):
     flash(f'La demande de congé a été {new_status.lower()}.', 'success')
     return redirect(url_for('list_leaves'))
 
+@app.route('/leaves/propose/<int:leave_id>', methods=['GET', 'POST'])
+@login_required
+@role_required(['CEO', 'RH'])
+def propose_new_dates(leave_id):
+    leave = Request.query.get_or_404(leave_id)
+
+    if request.method == 'POST':
+        new_start = datetime.strptime(request.form['new_start_date'], '%Y-%m-%d').date()
+        new_end = datetime.strptime(request.form['new_end_date'], '%Y-%m-%d').date()
+
+        if new_start > new_end:
+            flash('La date de début ne peut pas être après la date de fin.', 'danger')
+            return redirect(url_for('propose_new_dates', leave_id=leave_id))
+
+        # Met à jour les champs de proposition
+        leave.proposed_start_date = new_start
+        leave.proposed_end_date = new_end
+        # Le statut reste 'Pending' pour que l'employé puisse répondre
+        db.session.commit()
+
+        flash("Nouvelles dates proposées. En attente de la réponse de l'employé.", 'success')
+        return redirect(url_for('list_leaves'))
+
+    return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
+
+
 @app.route('/leaves/respond/<int:leave_id>', methods=['POST'])
 @login_required
 def respond_proposal(leave_id):
@@ -911,11 +912,9 @@ def respond_proposal(leave_id):
         leave.proposed_end_date = None   # On nettoie la proposition
         flash("Vous avez accepté la proposition. La demande est de nouveau en attente de validation.", "success")
     
-    # AMÉLIORATION ICI 👇
     elif response == 'decline':
         leave.proposed_start_date = None
         leave.proposed_end_date = None
-        # Le statut ne change pas, il reste en attente de la décision des RH
         flash("Vous avez refusé la contre-proposition. La demande reste en attente sur vos dates initiales.", "info")
     
     db.session.commit()
