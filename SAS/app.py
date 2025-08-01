@@ -143,7 +143,7 @@ class Request(db.Model):
     end_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), nullable=False, default='Pending')
     proposed_start_date = db.Column(db.Date, nullable=True)
-    proposed_end_date = db.Column(db.Date, nullable=True)
+    proposend_date = db.Column(db.Date, nullable=True)
 class Candidate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
@@ -466,10 +466,10 @@ def manage_users():
     users = User.query.all()
     
     # 1. On récupère les IDs de tous les employés déjà liés à un compte
-    linked_employee_ids = [user.employee_id for user in users if user.employee_id]
+    linkemployee_ids = [user.employee_id for user in users if user.employee_id]
     
     # 2. On récupère les employés qui ne sont PAS dans cette liste
-    unlinked_employees = Employee.query.filter(Employee.id.notin_(linked_employee_ids)).all()
+    unlinkemployees = Employee.query.filter(Employee.id.notin_(linked_employee_ids)).all()
 
     return render_template('main_template.html', view='users_list', users=users, unlinked_employees=unlinked_employees)
 
@@ -904,7 +904,7 @@ def propose_new_dates(leave_id):
 
     return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
 
-
+# Assurez-vous que cette fonction est bien dans votre app.py
 @app.route('/equipment/add/<category_name>', methods=['GET', 'POST'])
 @login_required
 def add_equipment(category_name):
@@ -914,7 +914,7 @@ def add_equipment(category_name):
         abort(404)
 
     if request.method == 'POST':
-        # La logique de sauvegarde est complète ici
+        # ... (toute votre logique de sauvegarde reste la même) ...
         category = request.form.get('category')
         name = request.form.get('name')
         status = request.form.get('status')
@@ -940,10 +940,10 @@ def add_equipment(category_name):
         db.session.add(new_equip)
         db.session.commit()
         flash(f'{category.rstrip("s")} ajouté avec succès.', 'success')
-        # ✅ REDIRECTION VERS LA BONNE LISTE
         return redirect(url_for('list_equipment_by_category', category_name=new_equip.category))
     
     employees = Employee.query.order_by(Employee.full_name).all()
+    # Cette ligne est la clé : on envoie la catégorie au template
     return render_template('main_template.html', 
                            view='equipment_form', 
                            form_title=f"Ajouter : {category_name.rstrip('s')}", 
