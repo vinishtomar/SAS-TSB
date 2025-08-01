@@ -84,14 +84,32 @@ class Client(db.Model):
     sav_tickets = db.relationship('SavTicket', backref='client', lazy=True)
 class Equipment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.String(50), nullable=False, default='Materiels')
-    name = db.Column(db.String(120), nullable=False)
-    brand = db.Column(db.String(80))
-    model = db.Column(db.String(80))
-    serial_number = db.Column(db.String(120), unique=True)
-    last_maintenance_date = db.Column(db.Date)
-    next_maintenance_date = db.Column(db.Date)
+    category = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(120), nullable=False) # Utilisé pour Vehicule, Engin, Materiel
     status = db.Column(db.String(50), default='In Service')
+    
+    # Champs pour TOUS (mais peuvent être vides)
+    notes = db.Column(db.Text, nullable=True)
+
+    # --- Champs spécifiques pour VEHICULES ---
+    immatriculation = db.Column(db.String(50), nullable=True)
+    responsable_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
+    responsable = db.relationship('Employee')
+    date_debut_responsabilite = db.Column(db.Date, nullable=True)
+    date_fin_responsabilite = db.Column(db.Date, nullable=True)
+
+    # --- Champs spécifiques pour ENGINS ---
+    type_engin = db.Column(db.String(100), nullable=True)
+    hauteur = db.Column(db.Float, nullable=True)
+    date_vgp = db.Column(db.Date, nullable=True) # Date de la prochaine VGP
+    nombre_cles = db.Column(db.Integer, nullable=True)
+    photo_fuel_url = db.Column(db.String(500), nullable=True) # URL de l'image
+
+    # --- Champs spécifiques pour MATERIELS ---
+    serial_number = db.Column(db.String(120), unique=True, nullable=True)
+    type_materiel = db.Column(db.String(100), nullable=True)
+    etat = db.Column(db.String(50), nullable=True) # ex: Neuf, Bon, Usé
+
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     quote_number = db.Column(db.String(50), unique=True, nullable=False)
@@ -457,31 +475,6 @@ def manage_users():
     unlinked_employees = Employee.query.filter(Employee.id.notin_(linked_employee_ids)).all()
 
     return render_template('main_template.html', view='users_list', users=users, unlinked_employees=unlinked_employees)
-
-@app.route('/equipment/add', methods=['GET', 'POST'])
-@login_required
-def add_equipment():
-    if current_user.role == 'Finance':
-        abort(403)
-
-    if request.method == 'POST':
-        new_equip = Equipment(
-            category=request.form['category'],
-            name=request.form['name'],
-            brand=request.form.get('brand'),
-            model=request.form.get('model'),
-            serial_number=request.form.get('serial_number'),
-            status=request.form['status'],
-            last_maintenance_date=datetime.strptime(request.form['last_maintenance_date'], '%Y-%m-%d').date() if request.form['last_maintenance_date'] else None,
-            next_maintenance_date=datetime.strptime(request.form['next_maintenance_date'], '%Y-%m-%d').date() if request.form['next_maintenance_date'] else None
-        )
-        db.session.add(new_equip)
-        db.session.commit()
-        flash('Équipement ajouté avec succès.', 'success')
-        return redirect(url_for('list_equipment_by_category', category_name=new_equip.category))
-        
-    return render_template('main_template.html', view='equipment_form', form_title="Ajouter un Équipement")
-
 
 
 @app.route('/quote/add', methods=['GET', 'POST'])
@@ -919,6 +912,55 @@ def propose_new_dates(leave_id):
     return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
 
 
+@app.route('/equipment/add', methods=['GET', 'POST'])
+@login_required
+def add_equipment():
+    if current_user.role == 'Finance':
+        abort(403)
+
+    if request.method == 'POST':
+        # Données communes
+        category = request.form.get('category')
+        name = request.form.get('name')
+        status = request.form.get('status')
+        notes = request.form.get('notes')
+
+        new_equip = Equipment(category=category, name=name, status=status, notes=notes)
+
+        if category == 'Vehicules':
+            new_equip.immatriculation = request.form.get('immatriculation')
+            responsable_id = request.form.get('responsable_id')
+            if responsable_id:
+                new_equip.responsable_id = int(responsable_id)
+            new_equip.date_debut_responsabilite = datetime.strptime(request.form['date_debut_responsabilite'], '%Y-%m-%d').date() if request.form.get('date_debut_responsabilite') else None
+            new_equip.date_fin_responsabilite = datetime.strptime(request.form['date_fin_responsabilite'], '%Y-%m-%d').date() if request.form.get('date_fin_responsabilite') else None
+        
+        elif category == 'Engins':
+            new_equip.type_engin = request.form.get('type_engin')
+            hauteur = request.form.get('hauteur')
+            if hauteur:
+                new_equip.hauteur = float(hauteur)
+            new_equip.date_vgp = datetime.strptime(request.form['date_vgp'], '%Y-%m-%d').date() if request.form.get('date_vgp') else None
+            nombre_cles = request.form.get('nombre_cles')
+            if nombre_cles:
+                new_equip.nombre_cles = int(nombre_cles)
+            # Note: La gestion de l'upload de photo est complexe et non incluse ici. On sauve un lien pour l'instant.
+            new_equip.photo_fuel_url = request.form.get('photo_fuel_url')
+
+        elif category == 'Materiels':
+            new_equip.serial_number = request.form.get('serial_number')
+            new_equip.type_materiel = request.form.get('type_materiel')
+            new_equip.etat = request.form.get('etat')
+
+        db.session.add(new_equip)
+        db.session.commit()
+        flash('Équipement ajouté avec succès.', 'success')
+        return redirect(url_for('list_equipment_by_category', category_name=new_equip.category))
+    
+    employees = Employee.query.order_by(Employee.full_name).all()
+    return render_template('main_template.html', view='equipment_form', form_title="Ajouter un Équipement", employees=employees)
+
+
 @app.route('/equipment/edit/<int:equipment_id>', methods=['GET', 'POST'])
 @login_required
 def edit_equipment(equipment_id):
@@ -927,19 +969,39 @@ def edit_equipment(equipment_id):
     
     equip = Equipment.query.get_or_404(equipment_id)
     if request.method == 'POST':
-        equip.category = request.form['category']
-        equip.name = request.form['name']
-        equip.brand = request.form.get('brand')
-        equip.model = request.form.get('model')
-        equip.serial_number = request.form.get('serial_number')
-        equip.status = request.form['status']
-        equip.last_maintenance_date = datetime.strptime(request.form['last_maintenance_date'], '%Y-%m-%d').date() if request.form['last_maintenance_date'] else None
-        equip.next_maintenance_date = datetime.strptime(request.form['next_maintenance_date'], '%Y-%m-%d').date() if request.form['next_maintenance_date'] else None
+        # Mise à jour des données
+        equip.category = request.form.get('category')
+        equip.name = request.form.get('name')
+        equip.status = request.form.get('status')
+        equip.notes = request.form.get('notes')
+
+        if equip.category == 'Vehicules':
+            equip.immatriculation = request.form.get('immatriculation')
+            responsable_id = request.form.get('responsable_id')
+            equip.responsable_id = int(responsable_id) if responsable_id else None
+            equip.date_debut_responsabilite = datetime.strptime(request.form['date_debut_responsabilite'], '%Y-%m-%d').date() if request.form.get('date_debut_responsabilite') else None
+            equip.date_fin_responsabilite = datetime.strptime(request.form['date_fin_responsabilite'], '%Y-%m-%d').date() if request.form.get('date_fin_responsabilite') else None
+        
+        elif equip.category == 'Engins':
+            equip.type_engin = request.form.get('type_engin')
+            hauteur = request.form.get('hauteur')
+            equip.hauteur = float(hauteur) if hauteur else None
+            equip.date_vgp = datetime.strptime(request.form['date_vgp'], '%Y-%m-%d').date() if request.form.get('date_vgp') else None
+            nombre_cles = request.form.get('nombre_cles')
+            equip.nombre_cles = int(nombre_cles) if nombre_cles else None
+            equip.photo_fuel_url = request.form.get('photo_fuel_url')
+
+        elif equip.category == 'Materiels':
+            equip.serial_number = request.form.get('serial_number')
+            equip.type_materiel = request.form.get('type_materiel')
+            equip.etat = request.form.get('etat')
+
         db.session.commit()
         flash('Équipement mis à jour avec succès.', 'success')
         return redirect(url_for('list_equipment_by_category', category_name=equip.category))
 
-    return render_template('main_template.html', view='equipment_form', form_title="Modifier l'Équipement", equipment=equip)
+    employees = Employee.query.order_by(Employee.full_name).all()
+    return render_template('main_template.html', view='equipment_form', form_title="Modifier l'Équipement", equipment=equip, employees=employees)
 
 
 @app.route('/leaves/respond/<int:leave_id>', methods=['POST'])
