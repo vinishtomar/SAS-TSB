@@ -84,6 +84,7 @@ class Client(db.Model):
     sav_tickets = db.relationship('SavTicket', backref='client', lazy=True)
 class Equipment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(50), nullable=False, default='Materiels')
     name = db.Column(db.String(120), nullable=False)
     brand = db.Column(db.String(80))
     model = db.Column(db.String(80))
@@ -456,25 +457,32 @@ def manage_users():
     unlinked_employees = Employee.query.filter(Employee.id.notin_(linked_employee_ids)).all()
 
     return render_template('main_template.html', view='users_list', users=users, unlinked_employees=unlinked_employees)
+
 @app.route('/equipment/add', methods=['GET', 'POST'])
 @login_required
-@role_required(['CEO', 'Chef de projet'])
 def add_equipment():
+    if current_user.role == 'Finance':
+        abort(403)
+
     if request.method == 'POST':
         new_equip = Equipment(
+            category=request.form['category'],
             name=request.form['name'],
-            brand=request.form['brand'],
-            model=request.form['model'],
-            serial_number=request.form['serial_number'],
+            brand=request.form.get('brand'),
+            model=request.form.get('model'),
+            serial_number=request.form.get('serial_number'),
             status=request.form['status'],
             last_maintenance_date=datetime.strptime(request.form['last_maintenance_date'], '%Y-%m-%d').date() if request.form['last_maintenance_date'] else None,
             next_maintenance_date=datetime.strptime(request.form['next_maintenance_date'], '%Y-%m-%d').date() if request.form['next_maintenance_date'] else None
         )
         db.session.add(new_equip)
         db.session.commit()
-        flash('Équipement ajouté.', 'success')
-        return redirect(url_for('list_equipment'))
-    return render_template('main_template.html', view='equipment_form')
+        flash('Équipement ajouté avec succès.', 'success')
+        return redirect(url_for('list_equipment_by_category', category_name=new_equip.category))
+        
+    return render_template('main_template.html', view='equipment_form', form_title="Ajouter un Équipement")
+
+
 
 @app.route('/quote/add', methods=['GET', 'POST'])
 @login_required
@@ -694,6 +702,23 @@ def add_employee():
         return redirect(url_for('list_employees'))
         
     return render_template('main_template.html', view='employee_form', form_title="Ajouter un Employé", employee=None)
+@app.route('/equipment/category/<category_name>')
+@login_required
+def list_equipment_by_category(category_name):
+    # Interdit l'accès au rôle Finance
+    if current_user.role == 'Finance':
+        abort(403)
+    
+    # Valide que la catégorie est l'une des valeurs attendues
+    if category_name not in ['Vehicules', 'Engins', 'Materiels']:
+        abort(404)
+
+    equipment_list = Equipment.query.filter_by(category=category_name).order_by(Equipment.name).all()
+    return render_template('main_template.html', 
+                           view='equipment_list', 
+                           equipment=equipment_list, 
+                           category_title=category_name)
+  
 @app.route('/employee/edit/<int:employee_id>', methods=['GET', 'POST'])
 @login_required
 @role_required(['CEO', 'RH'])
@@ -892,6 +917,30 @@ def propose_new_dates(leave_id):
         return redirect(url_for('list_leaves'))
 
     return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
+
+
+@app.route('/equipment/edit/<int:equipment_id>', methods=['GET', 'POST'])
+@login_required
+def edit_equipment(equipment_id):
+    if current_user.role == 'Finance':
+        abort(403)
+    
+    equip = Equipment.query.get_or_404(equipment_id)
+    if request.method == 'POST':
+        equip.category = request.form['category']
+        equip.name = request.form['name']
+        equip.brand = request.form.get('brand')
+        equip.model = request.form.get('model')
+        equip.serial_number = request.form.get('serial_number')
+        equip.status = request.form['status']
+        equip.last_maintenance_date = datetime.strptime(request.form['last_maintenance_date'], '%Y-%m-%d').date() if request.form['last_maintenance_date'] else None
+        equip.next_maintenance_date = datetime.strptime(request.form['next_maintenance_date'], '%Y-%m-%d').date() if request.form['next_maintenance_date'] else None
+        db.session.commit()
+        flash('Équipement mis à jour avec succès.', 'success')
+        return redirect(url_for('list_equipment_by_category', category_name=equip.category))
+
+    return render_template('main_template.html', view='equipment_form', form_title="Modifier l'Équipement", equipment=equip)
+
 
 @app.route('/leaves/respond/<int:leave_id>', methods=['POST'])
 @login_required
