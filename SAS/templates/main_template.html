@@ -1347,17 +1347,21 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {# C'est la colonne interactive pour les propositions #}
+                                                {# ========================================================== #}
+                                                {# ✅ C'EST LA PARTIE IMPORTANTE QUI AFFICHE LES BOUTONS ✅ #}
+                                                {# ========================================================== #}
                                                 {% if leave.proposed_start_date %}
                                                     <div class="p-2 bg-light border rounded">
                                                         <small class="d-block text-primary fw-bold">Nouvelles dates proposées :</small>
                                                         <strong>{{ leave.proposed_start_date.strftime('%d/%m/%Y') }} - {{ leave.proposed_end_date.strftime('%d/%m/%Y') }}</strong>
                                                         <hr class="my-2">
                                                         <div class="d-flex gap-2">
+                                                            <!-- Formulaire pour ACCEPTER -->
                                                             <form action="{{ url_for('respond_proposal', leave_id=leave.id) }}" method="POST" class="d-inline">
                                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                                 <button type="submit" name="response" value="accept" class="btn btn-sm btn-success w-100">Accepter</button>
                                                             </form>
+                                                            <!-- Formulaire pour REFUSER -->
                                                             <form action="{{ url_for('respond_proposal', leave_id=leave.id) }}" method="POST" class="d-inline">
                                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                                 <button type="submit" name="response" value="decline" class="btn btn-sm btn-danger w-100">Refuser</button>
@@ -1400,7 +1404,6 @@
                             </div>
                         </div>
                     </div>
-                    {% endif %}
 
                     {% if current_user.role == 'Chef de projet' %}
                     <div class="col-md-4 mb-3">
