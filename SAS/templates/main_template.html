@@ -449,57 +449,90 @@
                     </div>
                 </div>
 
-                {% elif view == 'equipment_list' %}
-                <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
-                    <h1 class="page-title mb-0">Gestion de l'Équipement</h1><a href="{{ url_for('add_equipment') }}"
-                        class="btn btn-primary"><i class="bi bi-plus-circle-fill me-2"></i>Ajouter</a>
-                </div>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <form class="row g-2 align-items-end" method="GET">
-                            <div class="col-auto"><label for="status" class="form-label">Filtrer par
-                                    statut:</label><select class="form-select" id="status" name="status"
-                                    onchange="this.form.submit()">
-                                    <option value="all" {% if current_filter=='all' %}selected{% endif %}>Tous</option>
-                                    <option value="In Service" {% if current_filter=='In Service' %}selected{% endif %}>
-                                        In Service</option>
-                                    <option value="Broken" {% if current_filter=='Broken' %}selected{% endif %}>Broken
-                                    </option>
-                                    <option value="Out of Order" {% if current_filter=='Out of Order' %}selected{% endif
-                                        %}>Out of Order</option>
-                                </select></div>
-                        </form>
+               {% elif view == 'equipment_list' %}
+                    <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
+                        <h1 class="page-title mb-0">Équipements : {{ category_title }}</h1>
+                        <a href="{{ url_for('add_equipment') }}" class="btn btn-primary"><i class="bi bi-plus-circle-fill me-2"></i>Ajouter</a>
                     </div>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Nom</th>
-                                        <th>Marque/Modèle</th>
-                                        <th>N° de Série</th>
-                                        <th>Prochaine Maintenance</th>
-                                        <th>Statut</th>
-                                    </tr>
-                                </thead>
-                                <tbody>{% for item in equipment %}<tr>
-                                        <td><strong>{{ item.name }}</strong></td>
-                                        <td>{{ item.brand or '' }} / {{ item.model or '' }}</td>
-                                        <td>{{ item.serial_number }}</td>
-                                        <td>{{ item.next_maintenance_date.strftime('%d/%m/%Y') if
-                                            item.next_maintenance_date else '-' }}</td>
-                                        <td><span
-                                                class="badge bg-{{'success' if item.status=='In Service' else 'danger'}}">{{
-                                                item.status }}</span></td>
-                                    </tr>{% else %}<tr>
-                                        <td colspan="5" class="text-center text-muted">Aucun équipement trouvé.</td>
-                                    </tr>{% endfor %}</tbody>
-                            </table>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Marque/Modèle</th>
+                                            <th>N° de Série</th>
+                                            <th>Prochaine Maintenance</th>
+                                            <th>Statut</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for item in equipment %}
+                                        <tr>
+                                            <td><strong>{{ item.name }}</strong></td>
+                                            <td>{{ item.brand or '' }} / {{ item.model or '' }}</td>
+                                            <td>{{ item.serial_number or '-' }}</td>
+                                            <td>{{ item.next_maintenance_date.strftime('%d/%m/%Y') if item.next_maintenance_date else '-' }}</td>
+                                            <td><span class="badge bg-{{'success' if item.status=='In Service' else 'danger'}}">{{ item.status }}</span></td>
+                                            <td>
+                                                <a href="{{ url_for('edit_equipment', equipment_id=item.id) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">Aucun équipement trouvé dans cette catégorie.</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    
+                    {# ====================================================================== #}
+                    {# === 3. REMPLACEZ LE FORMULAIRE D'AJOUT/MODIFICATION D'ÉQUIPEMENT === #}
+                    {# ====================================================================== #}
+                {% elif view == 'equipment_form' %}
+                    <div class="page-header-mobile-stack mb-4">
+                        <h1 class="page-title">{{ form_title }}</h1>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Catégorie</label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="Vehicules" {% if equipment and equipment.category == 'Vehicules' %}selected{% endif %}>Vehicules</option>
+                                        <option value="Engins" {% if equipment and equipment.category == 'Engins' %}selected{% endif %}>Engins</option>
+                                        <option value="Materiels" {% if not equipment or equipment.category == 'Materiels' %}selected{% endif %}>Materiels</option>
+                                    </select>
+                                </div>
+                    
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="name" class="form-label">Nom</label><input type="text" class="form-control" id="name" name="name" value="{{ equipment.name if equipment else '' }}" required></div>
+                                    <div class="col-md-6 mb-3"><label for="serial_number" class="form-label">N° de Série</label><input type="text" class="form-control" id="serial_number" name="serial_number" value="{{ equipment.serial_number if equipment else '' }}"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="brand" class="form-label">Marque</label><input type="text" class="form-control" id="brand" name="brand" value="{{ equipment.brand if equipment else '' }}"></div>
+                                    <div class="col-md-6 mb-3"><label for="model" class="form-label">Modèle</label><input type="text" class="form-control" id="model" name="model" value="{{ equipment.model if equipment else '' }}"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="last_maintenance_date" class="form-label">Dernière Maintenance</label><input type="date" class="form-control" id="last_maintenance_date" name="last_maintenance_date" value="{{ equipment.last_maintenance_date.strftime('%Y-%m-%d') if equipment and equipment.last_maintenance_date else '' }}"></div>
+                                    <div class="col-md-6 mb-3"><label for="next_maintenance_date" class="form-label">Prochaine Maintenance</label><input type="date" class="form-control" id="next_maintenance_date" name="next_maintenance_date" value="{{ equipment.next_maintenance_date.strftime('%Y-%m-%d') if equipment and equipment.next_maintenance_date else '' }}"></div>
+                                </div>
+                                <div class="mb-3"><label for="status" class="form-label">Statut</label><select class="form-select" id="status" name="status">
+                                    <option value="In Service" {% if equipment and equipment.status == 'In Service' %}selected{% endif %}>In Service</option>
+                                    <option value="Broken" {% if equipment and equipment.status == 'Broken' %}selected{% endif %}>Broken</option>
+                                    <option value="Out of Order" {% if equipment and equipment.status == 'Out of Order' %}selected{% endif %}>Out of Order</option>
+                                </select></div>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </form>
+                        </div>
+                    </div>
                 {% elif view == 'leave_request_form' %}
                     <h1 class="page-title">{{ form_title }}</h1>
                     <div class="card">
@@ -545,46 +578,7 @@
                             </form>
                         </div>
                     </div>
-                {% elif view == 'equipment_form' %}
-                <div class="page-header-mobile-stack mb-4">
-                    <h1 class="page-title">Ajouter un Équipement</h1>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <form method="POST" action="{{ url_for('add_equipment') }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="row">
-                                <div class="col-md-6 mb-3"><label for="name" class="form-label">Nom</label><input
-                                        type="text" class="form-control" id="name" name="name" required></div>
-                                <div class="col-md-6 mb-3"><label for="serial_number" class="form-label">N° de
-                                        Série</label><input type="text" class="form-control" id="serial_number"
-                                        name="serial_number"></div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3"><label for="brand" class="form-label">Marque</label><input
-                                        type="text" class="form-control" id="brand" name="brand"></div>
-                                <div class="col-md-6 mb-3"><label for="model" class="form-label">Modèle</label><input
-                                        type="text" class="form-control" id="model" name="model"></div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3"><label for="last_maintenance_date"
-                                        class="form-label">Dernière Maintenance</label><input type="date"
-                                        class="form-control" id="last_maintenance_date" name="last_maintenance_date">
-                                </div>
-                                <div class="col-md-6 mb-3"><label for="next_maintenance_date"
-                                        class="form-label">Prochaine Maintenance</label><input type="date"
-                                        class="form-control" id="next_maintenance_date" name="next_maintenance_date">
-                                </div>
-                            </div>
-                            <div class="mb-3"><label for="status" class="form-label">Statut</label><select
-                                    class="form-select" id="status" name="status">
-                                    <option value="In Service">In Service</option>
-                                    <option value="Broken">Broken</option>
-                                    <option value="Out of Order">Out of Order</option>
-                                </select></div><button type="submit" class="btn btn-primary">Enregistrer</button>
-                        </form>
-                    </div>
-                </div>
+                
 
                 {% elif view == 'quote_list' %}
                 <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
