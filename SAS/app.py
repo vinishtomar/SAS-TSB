@@ -85,11 +85,15 @@ class Client(db.Model):
 class Equipment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.String(50), nullable=False)
-    name = db.Column(db.String(120), nullable=False) # Utilisé pour Vehicule, Engin, Materiel
+    name = db.Column(db.String(120), nullable=False)
     status = db.Column(db.String(50), default='In Service')
-    
-    # Champs pour TOUS (mais peuvent être vides)
-    notes = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True) # Champ commentaire pour tous
+
+    # --- Champs originaux conservés ---
+    brand = db.Column(db.String(80), nullable=True)
+    model = db.Column(db.String(80), nullable=True)
+    last_maintenance_date = db.Column(db.Date, nullable=True)
+    next_maintenance_date = db.Column(db.Date, nullable=True)
 
     # --- Champs spécifiques pour VEHICULES ---
     immatriculation = db.Column(db.String(50), nullable=True)
@@ -101,14 +105,14 @@ class Equipment(db.Model):
     # --- Champs spécifiques pour ENGINS ---
     type_engin = db.Column(db.String(100), nullable=True)
     hauteur = db.Column(db.Float, nullable=True)
-    date_vgp = db.Column(db.Date, nullable=True) # Date de la prochaine VGP
+    date_vgp = db.Column(db.Date, nullable=True)
     nombre_cles = db.Column(db.Integer, nullable=True)
-    photo_fuel_url = db.Column(db.String(500), nullable=True) # URL de l'image
+    photo_fuel_url = db.Column(db.String(500), nullable=True)
 
     # --- Champs spécifiques pour MATERIELS ---
     serial_number = db.Column(db.String(120), unique=True, nullable=True)
     type_materiel = db.Column(db.String(100), nullable=True)
-    etat = db.Column(db.String(50), nullable=True) # ex: Neuf, Bon, Usé
+    etat = db.Column(db.String(50), nullable=True)
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
