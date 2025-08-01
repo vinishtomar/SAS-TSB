@@ -449,90 +449,156 @@
                     </div>
                 </div>
 
-               {% elif view == 'equipment_list' %}
-                    <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
-                        <h1 class="page-title mb-0">Équipements : {{ category_title }}</h1>
-                        <a href="{{ url_for('add_equipment') }}" class="btn btn-primary"><i class="bi bi-plus-circle-fill me-2"></i>Ajouter</a>
-                    </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Nom</th>
-                                            <th>Marque/Modèle</th>
-                                            <th>N° de Série</th>
-                                            <th>Prochaine Maintenance</th>
-                                            <th>Statut</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for item in equipment %}
-                                        <tr>
-                                            <td><strong>{{ item.name }}</strong></td>
-                                            <td>{{ item.brand or '' }} / {{ item.model or '' }}</td>
-                                            <td>{{ item.serial_number or '-' }}</td>
-                                            <td>{{ item.next_maintenance_date.strftime('%d/%m/%Y') if item.next_maintenance_date else '-' }}</td>
-                                            <td><span class="badge bg-{{'success' if item.status=='In Service' else 'danger'}}">{{ item.status }}</span></td>
-                                            <td>
-                                                <a href="{{ url_for('edit_equipment', equipment_id=item.id) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
-                                            </td>
-                                        </tr>
-                                    {% else %}
-                                        <tr>
-                                            <td colspan="6" class="text-center text-muted">Aucun équipement trouvé dans cette catégorie.</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+               {# ====================================================================== #}
+                {# === 1. REMPLACEZ LA VUE DE LA LISTE DES ÉQUIPEMENTS === #}
+                {# ====================================================================== #}
+                {% elif view == 'equipment_list' %}
+                <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
+                    <h1 class="page-title mb-0">Liste : {{ category_title }}</h1>
+                    <a href="{{ url_for('add_equipment') }}" class="btn btn-primary"><i class="bi bi-plus-circle-fill me-2"></i>Ajouter</a>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                {# En-têtes de tableau dynamiques #}
+                                <thead>
+                                    {% if category_title == 'Vehicules' %}
+                                    <tr>
+                                        <th>Immatriculation</th>
+                                        <th>Nom</th>
+                                        <th>Responsable</th>
+                                        <th>Période</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    {% elif category_title == 'Engins' %}
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Prochaine VGP</th>
+                                        <th>Clés</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    {% else %} {# Materiels #}
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>N° de Série</th>
+                                        <th>État</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    {% endif %}
+                                </thead>
+                                <tbody>
+                                {% for item in equipment %}
+                                    <tr>
+                                    {% if category_title == 'Vehicules' %}
+                                        <td><strong>{{ item.immatriculation or '-' }}</strong></td>
+                                        <td>{{ item.name }}</td>
+                                        <td>{{ item.responsable.full_name if item.responsable else '-' }}</td>
+                                        <td>{{ item.date_debut_responsabilite.strftime('%d/%m/%Y') if item.date_debut_responsabilite else 'N/A' }}</td>
+                                        <td><span class="badge bg-success">{{ item.status }}</span></td>
+                                    {% elif category_title == 'Engins' %}
+                                        <td><strong>{{ item.name }}</strong></td>
+                                        <td>{{ item.type_engin or '-' }}</td>
+                                        <td>{{ item.date_vgp.strftime('%d/%m/%Y') if item.date_vgp else '-' }}</td>
+                                        <td>{{ item.nombre_cles }}</td>
+                                        <td><span class="badge bg-success">{{ item.status }}</span></td>
+                                    {% else %} {# Materiels #}
+                                        <td><strong>{{ item.name }}</strong></td>
+                                        <td>{{ item.type_materiel or '-' }}</td>
+                                        <td>{{ item.serial_number or '-' }}</td>
+                                        <td>{{ item.etat or '-' }}</td>
+                                        <td><span class="badge bg-success">{{ item.status }}</span></td>
+                                    {% endif %}
+                                        <td>
+                                            <a href="{{ url_for('edit_equipment', equipment_id=item.id) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Aucun équipement trouvé dans cette catégorie.</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    
-                    {# ====================================================================== #}
-                    {# === 3. REMPLACEZ LE FORMULAIRE D'AJOUT/MODIFICATION D'ÉQUIPEMENT === #}
-                    {# ====================================================================== #}
+                </div>
+                
+                {# ====================================================================== #}
+                {# === 2. REMPLACEZ LE FORMULAIRE D'AJOUT/MODIFICATION D'ÉQUIPEMENT === #}
+                {# ====================================================================== #}
                 {% elif view == 'equipment_form' %}
-                    <div class="page-header-mobile-stack mb-4">
-                        <h1 class="page-title">{{ form_title }}</h1>
-                    </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <form method="POST">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                
-                                <div class="mb-3">
+                <div class="page-header-mobile-stack mb-4">
+                    <h1 class="page-title">{{ form_title }}</h1>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
                                     <label for="category" class="form-label">Catégorie</label>
-                                    <select class="form-select" id="category" name="category" required>
+                                    <select class="form-select" id="category" name="category" required onchange="toggleFields()">
                                         <option value="Vehicules" {% if equipment and equipment.category == 'Vehicules' %}selected{% endif %}>Vehicules</option>
                                         <option value="Engins" {% if equipment and equipment.category == 'Engins' %}selected{% endif %}>Engins</option>
                                         <option value="Materiels" {% if not equipment or equipment.category == 'Materiels' %}selected{% endif %}>Materiels</option>
                                     </select>
                                 </div>
-                    
+                                <div class="col-md-8 mb-3">
+                                    <label for="name" class="form-label">Nom / Modèle</label>
+                                    <input type="text" class="form-control" id="name" name="name" value="{{ equipment.name if equipment else '' }}" required>
+                                </div>
+                            </div>
+                            <hr>
+                
+                            <!-- Champs pour VEHICULES -->
+                            <div id="vehicule-fields" class="category-fields">
                                 <div class="row">
-                                    <div class="col-md-6 mb-3"><label for="name" class="form-label">Nom</label><input type="text" class="form-control" id="name" name="name" value="{{ equipment.name if equipment else '' }}" required></div>
-                                    <div class="col-md-6 mb-3"><label for="serial_number" class="form-label">N° de Série</label><input type="text" class="form-control" id="serial_number" name="serial_number" value="{{ equipment.serial_number if equipment else '' }}"></div>
+                                    <div class="col-md-6 mb-3"><label for="immatriculation" class="form-label">Immatriculation</label><input type="text" class="form-control" name="immatriculation" value="{{ equipment.immatriculation if equipment else '' }}"></div>
+                                    <div class="col-md-6 mb-3"><label for="responsable_id" class="form-label">Responsable</label><select class="form-select" name="responsable_id"><option value="">-- Aucun --</option>{% for emp in employees %}<option value="{{ emp.id }}" {% if equipment and equipment.responsable_id == emp.id %}selected{% endif %}>{{ emp.full_name }}</option>{% endfor %}</select></div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6 mb-3"><label for="brand" class="form-label">Marque</label><input type="text" class="form-control" id="brand" name="brand" value="{{ equipment.brand if equipment else '' }}"></div>
-                                    <div class="col-md-6 mb-3"><label for="model" class="form-label">Modèle</label><input type="text" class="form-control" id="model" name="model" value="{{ equipment.model if equipment else '' }}"></div>
+                                    <div class="col-md-6 mb-3"><label for="date_debut_responsabilite" class="form-label">Début Responsabilité</label><input type="date" class="form-control" name="date_debut_responsabilite" value="{{ equipment.date_debut_responsabilite.strftime('%Y-%m-%d') if equipment and equipment.date_debut_responsabilite else '' }}"></div>
+                                    <div class="col-md-6 mb-3"><label for="date_fin_responsabilite" class="form-label">Fin Responsabilité</label><input type="date" class="form-control" name="date_fin_responsabilite" value="{{ equipment.date_fin_responsabilite.strftime('%Y-%m-%d') if equipment and equipment.date_fin_responsabilite else '' }}"></div>
+                                </div>
+                            </div>
+                
+                            <!-- Champs pour ENGINS -->
+                            <div id="engin-fields" class="category-fields">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="type_engin" class="form-label">Type d'engin</label><input type="text" class="form-control" name="type_engin" value="{{ equipment.type_engin if equipment else '' }}" list="engin-types"><datalist id="engin-types"><option value="Nacelle ciseaux"><option value="Araignée"><option value="Autre"></datalist></div>
+                                    <div class="col-md-6 mb-3"><label for="hauteur" class="form-label">Hauteur (m)</label><input type="number" step="0.1" class="form-control" name="hauteur" value="{{ equipment.hauteur if equipment else '' }}"></div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6 mb-3"><label for="last_maintenance_date" class="form-label">Dernière Maintenance</label><input type="date" class="form-control" id="last_maintenance_date" name="last_maintenance_date" value="{{ equipment.last_maintenance_date.strftime('%Y-%m-%d') if equipment and equipment.last_maintenance_date else '' }}"></div>
-                                    <div class="col-md-6 mb-3"><label for="next_maintenance_date" class="form-label">Prochaine Maintenance</label><input type="date" class="form-control" id="next_maintenance_date" name="next_maintenance_date" value="{{ equipment.next_maintenance_date.strftime('%Y-%m-%d') if equipment and equipment.next_maintenance_date else '' }}"></div>
+                                    <div class="col-md-6 mb-3"><label for="date_vgp" class="form-label">Prochaine VGP</label><input type="date" class="form-control" name="date_vgp" value="{{ equipment.date_vgp.strftime('%Y-%m-%d') if equipment and equipment.date_vgp else '' }}"></div>
+                                    <div class="col-md-6 mb-3"><label for="nombre_cles" class="form-label">Nombre de clés</label><input type="number" class="form-control" name="nombre_cles" value="{{ equipment.nombre_cles if equipment else '' }}"></div>
                                 </div>
-                                <div class="mb-3"><label for="status" class="form-label">Statut</label><select class="form-select" id="status" name="status">
-                                    <option value="In Service" {% if equipment and equipment.status == 'In Service' %}selected{% endif %}>In Service</option>
-                                    <option value="Broken" {% if equipment and equipment.status == 'Broken' %}selected{% endif %}>Broken</option>
-                                    <option value="Out of Order" {% if equipment and equipment.status == 'Out of Order' %}selected{% endif %}>Out of Order</option>
-                                </select></div>
-                                <button type="submit" class="btn btn-primary">Enregistrer</button>
-                            </form>
-                        </div>
+                                 <div class="mb-3"><label for="photo_fuel_url" class="form-label">Lien photo réservoir (Optionnel)</label><input type="url" class="form-control" name="photo_fuel_url" value="{{ equipment.photo_fuel_url if equipment else '' }}"></div>
+                            </div>
+                
+                            <!-- Champs pour MATERIELS -->
+                            <div id="materiel-fields" class="category-fields">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3"><label for="type_materiel" class="form-label">Type de matériel</label><input type="text" class="form-control" name="type_materiel" value="{{ equipment.type_materiel if equipment else '' }}" list="materiel-types"><datalist id="materiel-types"><option value="Visseuse"><option value="Clé dynamo"><option value="Autre"></datalist></div>
+                                    <div class="col-md-4 mb-3"><label for="serial_number" class="form-label">N° de Série</label><input type="text" class="form-control" name="serial_number" value="{{ equipment.serial_number if equipment else '' }}"></div>
+                                    <div class="col-md-4 mb-3"><label for="etat" class="form-label">État</label><select class="form-select" name="etat"><option value="Neuf" {% if equipment and equipment.etat == 'Neuf' %}selected{% endif %}>Neuf</option><option value="Bon" {% if equipment and equipment.etat == 'Bon' %}selected{% endif %}>Bon</option><option value="Usé" {% if equipment and equipment.etat == 'Usé' %}selected{% endif %}>Usé</option></select></div>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            <div class="mb-3"><label for="notes" class="form-label">Commentaire / Notes</label><textarea class="form-control" name="notes" rows="3">{{ equipment.notes if equipment else '' }}</textarea></div>
+                            <div class="mb-3"><label for="status" class="form-label">Statut</label><select class="form-select" id="status" name="status"><option value="In Service" {% if equipment and equipment.status == 'In Service' %}selected{% endif %}>In Service</option><option value="Broken" {% if equipment and equipment.status == 'Broken' %}selected{% endif %}>Broken</option><option value="Out of Order" {% if equipment and equipment.status == 'Out of Order' %}selected{% endif %}>Out of Order</option></select></div>
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </form>
                     </div>
+                </div>
+
                 {% elif view == 'leave_request_form' %}
                     <h1 class="page-title">{{ form_title }}</h1>
                     <div class="card">
