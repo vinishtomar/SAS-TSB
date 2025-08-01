@@ -893,7 +893,6 @@ def propose_new_dates(leave_id):
 
     return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
 
-
 @app.route('/leaves/respond/<int:leave_id>', methods=['POST'])
 @login_required
 def respond_proposal(leave_id):
@@ -905,17 +904,25 @@ def respond_proposal(leave_id):
 
     response = request.form['response']
     if response == 'accept' and leave.proposed_start_date:
+        # On met à jour les dates avec celles de la proposition
         leave.start_date = leave.proposed_start_date
         leave.end_date = leave.proposed_end_date
-        leave.status = 'Pending' # Repasse en attente pour validation finale
-        leave.proposed_start_date = None # On nettoie la proposition
-        leave.proposed_end_date = None   # On nettoie la proposition
-        flash("Vous avez accepté la proposition. La demande est de nouveau en attente de validation.", "success")
-    
-    elif response == 'decline':
+        
+        # ✅ CHANGEMENT PRINCIPAL : Le statut passe directement à "Approuvé"
+        leave.status = 'Approved'
+        
+        # On nettoie les champs de proposition car elle est maintenant acceptée
         leave.proposed_start_date = None
         leave.proposed_end_date = None
-        flash("Vous avez refusé la contre-proposition. La demande reste en attente sur vos dates initiales.", "info")
+        
+        # ✅ On met à jour le message de confirmation
+        flash("Vous avez accepté la proposition. Votre congé est maintenant approuvé.", "success")
+    
+    elif response == 'decline':
+        # Si l'employé refuse, on efface juste la proposition
+        leave.proposed_start_date = None
+        leave.proposed_end_date = None
+        flash("Vous avez refusé la contre-proposition.", "info")
     
     db.session.commit()
     return redirect(url_for('my_leaves'))
