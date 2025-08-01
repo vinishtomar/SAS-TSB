@@ -455,7 +455,11 @@
                 {% elif view == 'equipment_list' %}
                 <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
                     <h1 class="page-title mb-0">Liste : {{ category_title }}</h1>
-                    <a href="{{ url_for('add_equipment') }}" class="btn btn-primary"><i class="bi bi-plus-circle-fill me-2"></i>Ajouter</a>
+                    
+                    {# ✅ CORRECTION ICI : Le lien passe maintenant la catégorie à la route 'add_equipment' #}
+                    <a href="{{ url_for('add_equipment', category_name=category_title) }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Ajouter un(e) {{ category_title.rstrip('s') }}
+                    </a>
                 </div>
                 <div class="card">
                     <div class="card-body">
@@ -464,32 +468,11 @@
                                 {# En-têtes de tableau dynamiques #}
                                 <thead>
                                     {% if category_title == 'Vehicules' %}
-                                    <tr>
-                                        <th>Immatriculation</th>
-                                        <th>Nom</th>
-                                        <th>Responsable</th>
-                                        <th>Période</th>
-                                        <th>Statut</th>
-                                        <th>Actions</th>
-                                    </tr>
+                                    <tr><th>Immatriculation</th><th>Nom</th><th>Responsable</th><th>Période</th><th>Statut</th><th>Actions</th></tr>
                                     {% elif category_title == 'Engins' %}
-                                    <tr>
-                                        <th>Nom</th>
-                                        <th>Type</th>
-                                        <th>Prochaine VGP</th>
-                                        <th>Clés</th>
-                                        <th>Statut</th>
-                                        <th>Actions</th>
-                                    </tr>
+                                    <tr><th>Nom</th><th>Type</th><th>Prochaine VGP</th><th>Clés</th><th>Statut</th><th>Actions</th></tr>
                                     {% else %} {# Materiels #}
-                                    <tr>
-                                        <th>Nom</th>
-                                        <th>Type</th>
-                                        <th>N° de Série</th>
-                                        <th>État</th>
-                                        <th>Statut</th>
-                                        <th>Actions</th>
-                                    </tr>
+                                    <tr><th>Nom</th><th>Type</th><th>N° de Série</th><th>État</th><th>Statut</th><th>Actions</th></tr>
                                     {% endif %}
                                 </thead>
                                 <tbody>
@@ -519,16 +502,14 @@
                                         </td>
                                     </tr>
                                 {% else %}
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted">Aucun équipement trouvé dans cette catégorie.</td>
-                                    </tr>
+                                    <tr><td colspan="6" class="text-center text-muted">Aucun équipement trouvé dans cette catégorie.</td></tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                
+
                 {# ====================================================================== #}
                 {# === 2. REMPLACEZ LE FORMULAIRE D'AJOUT/MODIFICATION D'ÉQUIPEMENT === #}
                 {# ====================================================================== #}
