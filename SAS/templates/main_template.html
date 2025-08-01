@@ -1322,7 +1322,7 @@
                                 <table class="table table-hover align-middle">
                                     <thead>
                                         <tr>
-                                            <th>Type de Congé</th>
+                                            <th>Type</th>
                                             <th>Dates Demandées</th>
                                             <th>Statut</th>
                                             <th>Proposition & Actions</th>
@@ -1341,7 +1341,7 @@
                                                 {% if leave.status == 'Approved' %}
                                                     <span class="badge bg-success">Approuvé</span>
                                                 {% elif leave.status == 'Pending' %}
-                                                    <span class="badge bg-warning">En attente</span>
+                                                    <span class="badge bg-warning text-dark">En attente</span>
                                                 {% elif leave.status == 'Rejected' %}
                                                     <span class="badge bg-danger">Refusé</span>
                                                 {% endif %}
@@ -1350,7 +1350,7 @@
                                                 {# C'est la colonne interactive pour les propositions #}
                                                 {% if leave.proposed_start_date %}
                                                     <div class="p-2 bg-light border rounded">
-                                                        <small class="d-block">Nouvelles dates proposées :</small>
+                                                        <small class="d-block text-primary fw-bold">Nouvelles dates proposées :</small>
                                                         <strong>{{ leave.proposed_start_date.strftime('%d/%m/%Y') }} - {{ leave.proposed_end_date.strftime('%d/%m/%Y') }}</strong>
                                                         <hr class="my-2">
                                                         <div class="d-flex gap-2">
