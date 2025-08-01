@@ -1309,84 +1309,79 @@
                 </div>
 
                 {% elif view == 'employee_leaves' %}
-                    <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
-                        <h1 class="page-title mb-0">Mes Demandes de Congé</h1>
-                        <a href="{{ url_for('request_leave') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle-fill me-2"></i>Nouvelle Demande
-                        </a>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>Dates Demandées</th>
-                                            <th>Statut</th>
-                                            <th>Proposition & Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for leave in leaves %}
-                                        <tr>
-                                            <td><strong>{{ leave._type }}</strong></td>
-                                            <td>
-                                                {{ leave.start_date.strftime('%d/%m/%Y') }} - {{ leave.end_date.strftime('%d/%m/%Y') }}
-                                                <small class="d-block text-muted">{{ (leave.end_date - leave.start_date).days + 1 }} jours</small>
-                                            </td>
-                                            <td>
-                                                {# Badge de couleur pour le statut #}
-                                                {% if leave.status == 'Approved' %}
-                                                    <span class="badge bg-success">Approuvé</span>
-                                                {% elif leave.status == 'Pending' %}
-                                                    <span class="badge bg-warning text-dark">En attente</span>
-                                                {% elif leave.status == 'Rejected' %}
-                                                    <span class="badge bg-danger">Refusé</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {# ========================================================== #}
-                                                {# ✅ C'EST LA PARTIE IMPORTANTE QUI AFFICHE LES BOUTONS ✅ #}
-                                                {# ========================================================== #}
-                                                {% if leave.proposed_start_date %}
-                                                    <div class="p-2 bg-light border rounded">
-                                                        <small class="d-block text-primary fw-bold">Nouvelles dates proposées :</small>
-                                                        <strong>{{ leave.proposed_start_date.strftime('%d/%m/%Y') }} - {{ leave.proposed_end_date.strftime('%d/%m/%Y') }}</strong>
-                                                        <hr class="my-2">
-                                                        <div class="d-flex gap-2">
-                                                            <!-- Formulaire pour ACCEPTER -->
-                                                            <form action="{{ url_for('respond_proposal', leave_id=leave.id) }}" method="POST" class="d-inline">
-                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                                <button type="submit" name="response" value="accept" class="btn btn-sm btn-success w-100">Accepter</button>
-                                                            </form>
-                                                            <!-- Formulaire pour REFUSER -->
-                                                            <form action="{{ url_for('respond_proposal', leave_id=leave.id) }}" method="POST" class="d-inline">
-                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                                <button type="submit" name="response" value="decline" class="btn btn-sm btn-danger w-100">Refuser</button>
-                                                            </form>
-                                                        </div>
+                <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
+                    <h1 class="page-title mb-0">Mes Demandes de Congé</h1>
+                    <a href="{{ url_for('request_leave') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Nouvelle Demande
+                    </a>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Dates Demandées</th>
+                                        <th>Statut</th>
+                                        <th>Proposition & Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leave in leaves %}
+                                    <tr>
+                                        <td><strong>{{ leave._type }}</strong></td>
+                                        <td>
+                                            {{ leave.start_date.strftime('%d/%m/%Y') }} - {{ leave.end_date.strftime('%d/%m/%Y') }}
+                                            <small class="d-block text-muted">{{ (leave.end_date - leave.start_date).days + 1 }} jours</small>
+                                        </td>
+                                        <td>
+                                            {% if leave.status == 'Approved' %}
+                                                <span class="badge bg-success">Approuvé</span>
+                                            {% elif leave.status == 'Pending' %}
+                                                <span class="badge bg-warning text-dark">En attente</span>
+                                            {% elif leave.status == 'Rejected' %}
+                                                <span class="badge bg-danger">Refusé</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {# This is the important part that shows the buttons #}
+                                            {% if leave.proposed_start_date %}
+                                                <div class="p-2 bg-light border rounded">
+                                                    <small class="d-block text-primary fw-bold">Nouvelles dates proposées :</small>
+                                                    <strong>{{ leave.proposed_start_date.strftime('%d/%m/%Y') }} - {{ leave.proposed_end_date.strftime('%d/%m/%Y') }}</strong>
+                                                    <hr class="my-2">
+                                                    <div class="d-flex gap-2">
+                                                        <!-- Form to ACCEPT -->
+                                                        <form action="{{ url_for('respond_proposal', leave_id=leave.id) }}" method="POST" class="d-inline">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" name="response" value="accept" class="btn btn-sm btn-success w-100">Accepter</button>
+                                                        </form>
+                                                        <!-- Form to DECLINE -->
+                                                        <form action="{{ url_for('respond_proposal', leave_id=leave.id) }}" method="POST" class="d-inline">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" name="response" value="decline" class="btn btn-sm btn-danger w-100">Refuser</button>
+                                                        </form>
                                                     </div>
-                                                {% else %}
-                                                    <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% else %}
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted py-5">
-                                                <i class="bi bi-calendar-x fs-2"></i>
-                                                <p class="mt-2 mb-0">Vous n'avez aucune demande de congé pour le moment.</p>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-5">
+                                            <i class="bi bi-calendar-x fs-2"></i>
+                                            <p class="mt-2 mb-0">Vous n'avez aucune demande de congé pour le moment.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
+                </div>
                 {% elif view == 'bienvenue_page' %}
                 <div class="page-header-mobile-stack">
                     <h1 class="page-title">Bienvenue, {{ current_user.username }} !</h1>
