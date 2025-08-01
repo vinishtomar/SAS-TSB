@@ -128,7 +128,25 @@
                                 class="bi bi-headphones"></i> SAV</a>
                     </div>
                     {% endif %}
-            
+                    
+                    {% if current_user.role != 'Finance' %}
+                    <div class="mt-2">
+                        <!-- CECI EST LE TITRE NON-CLIQUABLE -->
+                        <h3 class="nav-category-title">Equipement</h3>
+                        
+                        <!-- CE SONT LES LIENS CLIQUABLES -->
+                        <a class="nav-link" href="{{ url_for('list_equipment_by_category', category_name='Vehicules') }}">
+                           <i class="bi bi-truck-front-fill"></i> Vehicules
+                        </a>
+                        <a class="nav-link" href="{{ url_for('list_equipment_by_category', category_name='Engins') }}">
+                           <i class="bi bi-cone-striped"></i> Engins
+                        </a>
+                        <a class="nav-link" href="{{ url_for('list_equipment_by_category', category_name='Materiels') }}">
+                           <i class="bi bi-tools"></i> Materiels
+                        </a>
+                    </div>
+                    {% endif %}
+
                     {# --- SECTION FINANCES --- #}
                     {% if current_user.role in ['CEO', 'Finance'] %}
                     <div class="mt-2">
@@ -139,7 +157,7 @@
                             href="{{ url_for('list_factures') }}"><i class="bi bi-credit-card"></i> Factures</a>
                     </div>
                     {% endif %}
-            
+                    
                     {# --- SECTION AUTRES & EMPLOYÉS --- #}
                     <div class="mt-2">
                         <h3 class="nav-category-title">Autres</h3>
