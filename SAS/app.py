@@ -955,21 +955,31 @@ def add_equipment(category_name):
     return render_template('main_template.html', view='equipment_form', form_title=f"Ajouter : {category_name.rstrip('s')}", employees=employees, preselected_category=category_name)
 
 
-# Remplacez votre fonction edit_equipment par celle-ci
+
 @app.route('/equipment/edit/<int:equipment_id>', methods=['GET', 'POST'])
 @login_required
 def edit_equipment(equipment_id):
-    if current_user.role == 'Finance': abort(403)
+    if current_user.role == 'Finance':
+        abort(403)
+    
     equip = Equipment.query.get_or_404(equipment_id)
-
+    
     if request.method == 'POST':
-        # ... (logique de mise à jour des champs communs) ...
+        # Mise à jour des champs communs
         equip.category = request.form.get('category')
         equip.name = request.form.get('name')
         equip.status = request.form.get('status')
         equip.notes = request.form.get('notes')
         
-        if equip.category == 'Engins':
+        # Mise à jour des champs spécifiques à la catégorie
+        if equip.category == 'Vehicules':
+            equip.immatriculation = request.form.get('immatriculation')
+            responsable_id = request.form.get('responsable_id')
+            equip.responsable_id = int(responsable_id) if responsable_id else None
+            equip.date_debut_responsabilite = datetime.strptime(request.form['date_debut_responsabilite'], '%Y-%m-%d').date() if request.form.get('date_debut_responsabilite') else None
+            equip.date_fin_responsabilite = datetime.strptime(request.form['date_fin_responsabilite'], '%Y-%m-%d').date() if request.form.get('date_fin_responsabilite') else None
+        
+        elif equip.category == 'Engins':
             equip.type_engin = request.form.get('type_engin')
             hauteur = request.form.get('hauteur')
             equip.hauteur = float(hauteur) if hauteur else None
@@ -978,27 +988,38 @@ def edit_equipment(equipment_id):
             nombre_cles = request.form.get('nombre_cles')
             equip.nombre_cles = int(nombre_cles) if nombre_cles else None
             
-            # LOGIQUE D'UPLOAD DE FICHIER CORRECTE
+            # Logique pour la mise à jour de la photo
             if 'photo_fuel' in request.files:
                 file = request.files['photo_fuel']
                 if file and file.filename != '':
+                    # Supprimer l'ancienne photo si elle existe
                     if equip.photo_fuel_url:
                         try:
                             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], equip.photo_fuel_url))
                         except OSError:
-                            pass
+                            pass # Le fichier n'existait pas, pas de problème
+                    
+                    # Sauvegarder la nouvelle photo
                     filename = secure_filename(file.filename)
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     equip.photo_fuel_url = filename
-        
-        # ... (logique pour les autres catégories) ...
+
+        elif equip.category == 'Materiels':
+            equip.serial_number = request.form.get('serial_number')
+            equip.type_materiel = request.form.get('type_materiel')
+            equip.etat = request.form.get('etat')
 
         db.session.commit()
-        flash('Équipement mis à jour.', 'success')
+        flash('Équipement mis à jour avec succès.', 'success')
         return redirect(url_for('list_equipment_by_category', category_name=equip.category))
 
+    # Logique pour la méthode GET (afficher le formulaire)
     employees = Employee.query.order_by(Employee.full_name).all()
-    return render_template('main_template.html', view='equipment_form', form_title="Modifier l'Équipement", equipment=equip, employees=employees)
+    return render_template('main_template.html', 
+                           view='equipment_form', 
+                           form_title="Modifier l'Équipement", 
+                           equipment=equip, 
+                           employees=employees)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
