@@ -105,7 +105,7 @@ class Equipment(db.Model):
     serial_number = db.Column(db.String(120), unique=True, nullable=True)
     type_materiel = db.Column(db.String(100), nullable=True)
     etat = db.Column(db.String(50), nullable=True)
-
+    niveau_fioul = db.Column(db.String(50), nullable=True)
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -920,35 +920,38 @@ def add_equipment(category_name):
         status = request.form.get('status')
         notes = request.form.get('notes')
         new_equip = Equipment(category=category, name=name, status=status, notes=notes)
-        if category == 'Vehicules':
+        if new_equip.category == 'Vehicules':
+            # ... (logique de sauvegarde pour Vehicules) ...
             new_equip.immatriculation = request.form.get('immatriculation')
             responsable_id = request.form.get('responsable_id')
             if responsable_id: new_equip.responsable_id = int(responsable_id)
             if request.form.get('date_debut_responsabilite'): new_equip.date_debut_responsabilite = datetime.strptime(request.form['date_debut_responsabilite'], '%Y-%m-%d').date()
             if request.form.get('date_fin_responsabilite'): new_equip.date_fin_responsabilite = datetime.strptime(request.form['date_fin_responsabilite'], '%Y-%m-%d').date()
-        elif category == 'Engins':
+
+        elif new_equip.category == 'Engins':
+            # ... (logique de sauvegarde pour Engins) ...
             new_equip.type_engin = request.form.get('type_engin')
             if request.form.get('hauteur'): new_equip.hauteur = float(request.form.get('hauteur'))
             if request.form.get('date_vgp'): new_equip.date_vgp = datetime.strptime(request.form['date_vgp'], '%Y-%m-%d').date()
             if request.form.get('nombre_cles'): new_equip.nombre_cles = int(request.form.get('nombre_cles'))
             new_equip.photo_fuel_url = request.form.get('photo_fuel_url')
-        elif category == 'Materiels':
+            # ✅ SAUVEGARDE DU NOUVEAU CHAMP
+            new_equip.niveau_fioul = request.form.get('niveau_fioul')
+
+        elif new_equip.category == 'Materiels':
+            # ... (logique de sauvegarde pour Materiels) ...
             new_equip.serial_number = request.form.get('serial_number')
             new_equip.type_materiel = request.form.get('type_materiel')
             new_equip.etat = request.form.get('etat')
-        
+
         db.session.add(new_equip)
         db.session.commit()
-        flash(f'{category.rstrip("s")} ajouté avec succès.', 'success')
+        flash(f'{new_equip.category.rstrip("s")} ajouté avec succès.', 'success')
         return redirect(url_for('list_equipment_by_category', category_name=new_equip.category))
     
     employees = Employee.query.order_by(Employee.full_name).all()
-    # Cette ligne est la clé : on envoie la catégorie au template
-    return render_template('main_template.html', 
-                           view='equipment_form', 
-                           form_title=f"Ajouter : {category_name.rstrip('s')}", 
-                           employees=employees,
-                           preselected_category=category_name)
+    return render_template('main_template.html', view='equipment_form', form_title=f"Ajouter : {category_name.rstrip('s')}", employees=employees, preselected_category=category_name)
+
 
 @app.route('/equipment/edit/<int:equipment_id>', methods=['GET', 'POST'])
 @login_required
@@ -973,6 +976,7 @@ def edit_equipment(equipment_id):
             hauteur = request.form.get('hauteur')
             equip.hauteur = float(hauteur) if hauteur else None
             equip.date_vgp = datetime.strptime(request.form['date_vgp'], '%Y-%m-%d').date() if request.form.get('date_vgp') else None
+            equip.niveau_fioul = request.form.get('niveau_fioul')
             nombre_cles = request.form.get('nombre_cles')
             equip.nombre_cles = int(nombre_cles) if nombre_cles else None
             equip.photo_fuel_url = request.form.get('photo_fuel_url')
