@@ -478,13 +478,13 @@
                                         <td>{{ item.notes or '-' }}</td>
                                         <td><span class="badge bg-success">{{ item.status }}</span></td>
                                     {% elif category_title == 'Engins' %}
-                                        <td>
+                                       <td>
                                             {% if item.photo_fuel_url %}
                                                 <a href="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" target="_blank">
                                                     <img src="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" alt="Photo fioul" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
                                                 </a>
                                             {% else %}
-                                                -
+                                                <i class="bi bi-camera fs-4 text-muted"></i>
                                             {% endif %}
                                         </td>
                                         <td><strong>{{ item.name }}</strong></td>
@@ -552,7 +552,7 @@
                                 </div>
                                 {% endif %}
                             {% endif %}
-
+                            
                             {# --- FORMULAIRE POUR MATERIELS --- #}
                             {% if preselected_category == 'Materiels' or (equipment and equipment.category == 'Materiels') %}
                                 <div class="row"><div class="col-md-6 mb-3"><label for="name" class="form-label">Nom du matériel</label><input type="text" class="form-control" name="name" value="{{ equipment.name if equipment else '' }}" required></div><div class="col-md-6 mb-3"><label for="type_materiel" class="form-label">Type</label><input type="text" class="form-control" name="type_materiel" value="{{ equipment.type_materiel if equipment else '' }}" list="materiel-types" placeholder="Visseuse..."><datalist id="materiel-types"><option value="Visseuse"><option value="Clé dynamo"><option value="Autre"></datalist></div></div>
