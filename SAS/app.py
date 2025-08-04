@@ -19,6 +19,8 @@ from functools import wraps
 from weasyprint import HTML
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from werkzeug.utils import secure_filename
+from flask import send_from_directory
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -40,6 +42,10 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 csrf = CSRFProtect(app)
 # --- DATABASE MODELS ---
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000 # Limite la taille des fichiers à 16MB
 
 
 # --- DECORATEUR DE ROLE ---
@@ -937,6 +943,12 @@ def add_equipment(category_name):
             new_equip.photo_fuel_url = request.form.get('photo_fuel_url')
             # ✅ SAUVEGARDE DU NOUVEAU CHAMP
             new_equip.niveau_fioul = request.form.get('niveau_fioul')
+            if 'photo_fuel' in request.files:
+                file = request.files['photo_fuel']
+                if file and file.filename != '':
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    new_equip.photo_fuel_url = filename # On sauvegarde juste le nom du fichier
 
         elif new_equip.category == 'Materiels':
             # ... (logique de sauvegarde pour Materiels) ...
@@ -980,6 +992,18 @@ def edit_equipment(equipment_id):
             nombre_cles = request.form.get('nombre_cles')
             equip.nombre_cles = int(nombre_cles) if nombre_cles else None
             equip.photo_fuel_url = request.form.get('photo_fuel_url')
+            if 'photo_fuel' in request.files:
+                file = request.files['photo_fuel']
+                if file and file.filename != '':
+                    # Optionnel : supprimer l'ancienne image si elle existe
+                    if equip.photo_fuel_url:
+                        try:
+                            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], equip.photo_fuel_url))
+                        except OSError:
+                            pass # Le fichier n'existait pas
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    equip.photo_fuel_url = filename
         elif equip.category == 'Materiels':
             equip.serial_number = request.form.get('serial_number')
             equip.type_materiel = request.form.get('type_materiel')
@@ -989,7 +1013,9 @@ def edit_equipment(equipment_id):
         return redirect(url_for('list_equipment_by_category', category_name=equip.category))
     employees = Employee.query.order_by(Employee.full_name).all()
     return render_template('main_template.html', view='equipment_form', form_title="Modifier l'Équipement", equipment=equip, employees=employees)
-
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/leaves/respond/<int:leave_id>', methods=['POST'])
 @login_required
