@@ -463,7 +463,8 @@
                                     {% if category_title == 'Vehicules' %}
                                     <tr><th>Immatriculation</th><th>Nom</th><th>Responsable</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
                                     {% elif category_title == 'Engins' %}
-                                    <tr><th>Nom</th><th>Type</th><th>Photo</th><th>Prochaine VGP</th><th>Fioul</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
+                                    {# ✅ ORDRE DES EN-TÊTES CORRIGÉ ICI #}
+                                    <tr><th>Photo</th><th>Nom</th><th>Type</th><th>Prochaine VGP</th><th>Fioul</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
                                     {% else %} {# Materiels #}
                                     <tr><th>Nom</th><th>Type</th><th>N° de Série</th><th>État</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
                                     {% endif %}
@@ -478,8 +479,9 @@
                                         <td>{{ item.notes or '-' }}</td>
                                         <td><span class="badge bg-success">{{ item.status }}</span></td>
                                     {% elif category_title == 'Engins' %}
-                                       <td>
+                                        <td>
                                             {% if item.photo_fuel_url %}
+                                                {# Ce lien permet d'ouvrir l'image dans un nouvel onglet pour la voir ou la télécharger #}
                                                 <a href="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" target="_blank">
                                                     <img src="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" alt="Photo fioul" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
                                                 </a>
@@ -504,14 +506,13 @@
                                         <td><a href="{{ url_for('edit_equipment', equipment_id=item.id) }}" class="btn btn-sm btn-outline-secondary">Modifier</a></td>
                                     </tr>
                                 {% else %}
-                                    <tr><td colspan="7" class="text-center text-muted">Aucun équipement trouvé dans cette catégorie.</td></tr>
+                                    <tr><td colspan="8" class="text-center text-muted">Aucun équipement trouvé dans cette catégorie.</td></tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-
                 {# ====================================================================== #}
                 {# === 2. REMPLACEZ LE FORMULAIRE D'ÉQUIPEMENT ('equipment_form') === #}
                 {# ====================================================================== #}
