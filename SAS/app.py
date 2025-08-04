@@ -910,24 +910,17 @@ def propose_new_dates(leave_id):
 
     return render_template('main_template.html', view='propose_new_dates', leave=leave, form_title="Proposer de nouvelles dates")
 
-# Assurez-vous que cette fonction est bien dans votre app.py
+# Remplacez votre fonction add_equipment par celle-ci
 @app.route('/equipment/add/<category_name>', methods=['GET', 'POST'])
 @login_required
 def add_equipment(category_name):
-    if current_user.role == 'Finance':
-        abort(403)
-    if category_name not in ['Vehicules', 'Engins', 'Materiels']:
-        abort(404)
+    if current_user.role == 'Finance': abort(403)
+    if category_name not in ['Vehicules', 'Engins', 'Materiels']: abort(404)
 
     if request.method == 'POST':
-        # ... (toute votre logique de sauvegarde reste la même) ...
-        category = request.form.get('category')
-        name = request.form.get('name')
-        status = request.form.get('status')
-        notes = request.form.get('notes')
-        new_equip = Equipment(category=category, name=name, status=status, notes=notes)
+        new_equip = Equipment(category=request.form.get('category'), name=request.form.get('name'), status=request.form.get('status'), notes=request.form.get('notes'))
+        
         if new_equip.category == 'Vehicules':
-            # ... (logique de sauvegarde pour Vehicules) ...
             new_equip.immatriculation = request.form.get('immatriculation')
             responsable_id = request.form.get('responsable_id')
             if responsable_id: new_equip.responsable_id = int(responsable_id)
@@ -935,23 +928,21 @@ def add_equipment(category_name):
             if request.form.get('date_fin_responsabilite'): new_equip.date_fin_responsabilite = datetime.strptime(request.form['date_fin_responsabilite'], '%Y-%m-%d').date()
 
         elif new_equip.category == 'Engins':
-            # ... (logique de sauvegarde pour Engins) ...
             new_equip.type_engin = request.form.get('type_engin')
             if request.form.get('hauteur'): new_equip.hauteur = float(request.form.get('hauteur'))
             if request.form.get('date_vgp'): new_equip.date_vgp = datetime.strptime(request.form['date_vgp'], '%Y-%m-%d').date()
             if request.form.get('nombre_cles'): new_equip.nombre_cles = int(request.form.get('nombre_cles'))
-            new_equip.photo_fuel_url = request.form.get('photo_fuel_url')
-            # ✅ SAUVEGARDE DU NOUVEAU CHAMP
             new_equip.niveau_fioul = request.form.get('niveau_fioul')
+            
+            # ✅ LOGIQUE D'UPLOAD DE FICHIER CORRECTE
             if 'photo_fuel' in request.files:
                 file = request.files['photo_fuel']
                 if file and file.filename != '':
                     filename = secure_filename(file.filename)
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    new_equip.photo_fuel_url = filename # On sauvegarde juste le nom du fichier
+                    new_equip.photo_fuel_url = filename # On sauvegarde le nom du fichier
 
         elif new_equip.category == 'Materiels':
-            # ... (logique de sauvegarde pour Materiels) ...
             new_equip.serial_number = request.form.get('serial_number')
             new_equip.type_materiel = request.form.get('type_materiel')
             new_equip.etat = request.form.get('etat')
@@ -965,24 +956,26 @@ def add_equipment(category_name):
     return render_template('main_template.html', view='equipment_form', form_title=f"Ajouter : {category_name.rstrip('s')}", employees=employees, preselected_category=category_name)
 
 
+# Remplacez votre fonction edit_equipment par celle-ci
 @app.route('/equipment/edit/<int:equipment_id>', methods=['GET', 'POST'])
 @login_required
 def edit_equipment(equipment_id):
-    # ... (la logique de modification reste la même)
-    if current_user.role == 'Finance':
-        abort(403)
+    if current_user.role == 'Finance': abort(403)
     equip = Equipment.query.get_or_404(equipment_id)
+
     if request.method == 'POST':
         equip.category = request.form.get('category')
         equip.name = request.form.get('name')
         equip.status = request.form.get('status')
         equip.notes = request.form.get('notes')
+
         if equip.category == 'Vehicules':
             equip.immatriculation = request.form.get('immatriculation')
             responsable_id = request.form.get('responsable_id')
             equip.responsable_id = int(responsable_id) if responsable_id else None
             equip.date_debut_responsabilite = datetime.strptime(request.form['date_debut_responsabilite'], '%Y-%m-%d').date() if request.form.get('date_debut_responsabilite') else None
             equip.date_fin_responsabilite = datetime.strptime(request.form['date_fin_responsabilite'], '%Y-%m-%d').date() if request.form.get('date_fin_responsabilite') else None
+        
         elif equip.category == 'Engins':
             equip.type_engin = request.form.get('type_engin')
             hauteur = request.form.get('hauteur')
@@ -991,28 +984,32 @@ def edit_equipment(equipment_id):
             equip.niveau_fioul = request.form.get('niveau_fioul')
             nombre_cles = request.form.get('nombre_cles')
             equip.nombre_cles = int(nombre_cles) if nombre_cles else None
-            equip.photo_fuel_url = request.form.get('photo_fuel_url')
+            
+            # ✅ LOGIQUE D'UPLOAD DE FICHIER CORRECTE
             if 'photo_fuel' in request.files:
                 file = request.files['photo_fuel']
                 if file and file.filename != '':
-                    # Optionnel : supprimer l'ancienne image si elle existe
                     if equip.photo_fuel_url:
                         try:
                             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], equip.photo_fuel_url))
                         except OSError:
-                            pass # Le fichier n'existait pas
+                            pass
                     filename = secure_filename(file.filename)
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     equip.photo_fuel_url = filename
+
         elif equip.category == 'Materiels':
             equip.serial_number = request.form.get('serial_number')
             equip.type_materiel = request.form.get('type_materiel')
             equip.etat = request.form.get('etat')
+
         db.session.commit()
         flash('Équipement mis à jour.', 'success')
         return redirect(url_for('list_equipment_by_category', category_name=equip.category))
+
     employees = Employee.query.order_by(Employee.full_name).all()
     return render_template('main_template.html', view='equipment_form', form_title="Modifier l'Équipement", equipment=equip, employees=employees)
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
