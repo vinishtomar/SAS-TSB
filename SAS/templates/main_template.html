@@ -453,17 +453,26 @@
                 {% elif view == 'equipment_list' %}
                 <div class="d-flex justify-content-between align-items-center mb-4 page-header-mobile-stack">
                     <h1 class="page-title mb-0">Liste : {{ category_title }}</h1>
-                    <a href="{{ url_for('add_equipment', category_name=category_title) }}" class="btn btn-primary"><i class="bi bi-plus-circle-fill me-2"></i>Ajouter un(e) {{ category_title.rstrip('s') }}</a>
+                    
+                    {# ✅ CORRECTION DU TEXTE DU BOUTON ICI #}
+                    {% set button_text = "Ajouter un(e) " + category_title.rstrip('s') %}
+                    {% if category_title == 'Vehicules' %}{% set button_text = "Ajouter un Véhicule" %}{% endif %}
+                    {% if category_title == 'Engins' %}{% set button_text = "Ajouter un Engin" %}{% endif %}
+                    {% if category_title == 'Materiels' %}{% set button_text = "Ajouter un Matériel" %}{% endif %}
+                    
+                    <a href="{{ url_for('add_equipment', category_name=category_title) }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle-fill me-2"></i>{{ button_text }}
+                    </a>
                 </div>
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
+                                {# ... (votre thead reste le même) ... #}
                                 <thead>
                                     {% if category_title == 'Vehicules' %}
                                     <tr><th>Immatriculation</th><th>Nom</th><th>Responsable</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
                                     {% elif category_title == 'Engins' %}
-                                    {# ✅ ORDRE DES EN-TÊTES CORRIGÉ ICI #}
                                     <tr><th>Photo</th><th>Nom</th><th>Type</th><th>Prochaine VGP</th><th>Fioul</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
                                     {% else %} {# Materiels #}
                                     <tr><th>Nom</th><th>Type</th><th>N° de Série</th><th>État</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
@@ -472,38 +481,41 @@
                                 <tbody>
                                 {% for item in equipment %}
                                     <tr>
-                                    {% if category_title == 'Vehicules' %}
-                                        <td><strong>{{ item.immatriculation or '-' }}</strong></td>
-                                        <td>{{ item.name }}</td>
-                                        <td>{{ item.responsable.full_name if item.responsable else '-' }}</td>
-                                        <td>{{ item.notes or '-' }}</td>
-                                        <td><span class="badge bg-success">{{ item.status }}</span></td>
-                                    {% elif category_title == 'Engins' %}
-                                        {# ✅ ORDRE DES DONNÉES CORRIGÉ ICI #}
+                                        {# ... (vos colonnes de données restent les mêmes) ... #}
+                                        {% if category_title == 'Vehicules' %}
+                                            <td><strong>{{ item.immatriculation or '-' }}</strong></td>
+                                            <td>{{ item.name }}</td>
+                                            <td>{{ item.responsable.full_name if item.responsable else '-' }}</td>
+                                            <td>{{ item.notes or '-' }}</td>
+                                            <td><span class="badge bg-success">{{ item.status }}</span></td>
+                                        {% elif category_title == 'Engins' %}
+                                            <td>
+                                                {% if item.photo_fuel_url %}<a href="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" target="_blank"><img src="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" alt="Photo fioul" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;"></a>
+                                                {% else %}<i class="bi bi-camera fs-4 text-muted"></i>{% endif %}
+                                            </td>
+                                            <td><strong>{{ item.name }}</strong></td>
+                                            <td>{{ item.type_engin or '-' }}</td>
+                                            <td>{{ item.date_vgp.strftime('%d/%m/%Y') if item.date_vgp else '-' }}</td>
+                                            <td>{{ item.niveau_fioul or '-' }}</td>
+                                            <td>{{ item.notes or '-' }}</td>
+                                            <td><span class="badge bg-success">{{ item.status }}</span></td>
+                                        {% else %} {# Materiels #}
+                                            <td><strong>{{ item.name }}</strong></td>
+                                            <td>{{ item.type_materiel or '-' }}</td>
+                                            <td>{{ item.serial_number or '-' }}</td>
+                                            <td>{{ item.etat or '-' }}</td>
+                                            <td>{{ item.notes or '-' }}</td>
+                                            <td><span class="badge bg-success">{{ item.status }}</span></td>
+                                        {% endif %}
                                         <td>
-                                            {% if item.photo_fuel_url %}
-                                                <a href="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" target="_blank">
-                                                    <img src="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" alt="Photo fioul" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
-                                                </a>
-                                            {% else %}
-                                                <i class="bi bi-camera fs-4 text-muted"></i>
-                                            {% endif %}
+                                            <a href="{{ url_for('edit_equipment', equipment_id=item.id) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                            
+                                            {# ✅ BOUTON SUPPRIMER AJOUTÉ ICI #}
+                                            <form action="{{ url_for('delete_equipment', equipment_id=item.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet élément ?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                            </form>
                                         </td>
-                                        <td><strong>{{ item.name }}</strong></td>
-                                        <td>{{ item.type_engin or '-' }}</td>
-                                        <td>{{ item.date_vgp.strftime('%d/%m/%Y') if item.date_vgp else '-' }}</td>
-                                        <td>{{ item.niveau_fioul or '-' }}</td>
-                                        <td>{{ item.notes or '-' }}</td>
-                                        <td><span class="badge bg-success">{{ item.status }}</span></td>
-                                    {% else %} {# Materiels #}
-                                        <td><strong>{{ item.name }}</strong></td>
-                                        <td>{{ item.type_materiel or '-' }}</td>
-                                        <td>{{ item.serial_number or '-' }}</td>
-                                        <td>{{ item.etat or '-' }}</td>
-                                        <td>{{ item.notes or '-' }}</td>
-                                        <td><span class="badge bg-success">{{ item.status }}</span></td>
-                                    {% endif %}
-                                        <td><a href="{{ url_for('edit_equipment', equipment_id=item.id) }}" class="btn btn-sm btn-outline-secondary">Modifier</a></td>
                                     </tr>
                                 {% else %}
                                     <tr><td colspan="8" class="text-center text-muted">Aucun équipement trouvé dans cette catégorie.</td></tr>
