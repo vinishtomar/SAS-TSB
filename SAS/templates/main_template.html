@@ -479,9 +479,9 @@
                                         <td>{{ item.notes or '-' }}</td>
                                         <td><span class="badge bg-success">{{ item.status }}</span></td>
                                     {% elif category_title == 'Engins' %}
+                                        {# ✅ ORDRE DES DONNÉES CORRIGÉ ICI #}
                                         <td>
                                             {% if item.photo_fuel_url %}
-                                                {# Ce lien permet d'ouvrir l'image dans un nouvel onglet pour la voir ou la télécharger #}
                                                 <a href="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" target="_blank">
                                                     <img src="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" alt="Photo fioul" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
                                                 </a>
@@ -514,7 +514,6 @@
                     </div>
                 </div>
                 {# ====================================================================== #}
-                {# === 2. REMPLACEZ LE FORMULAIRE D'ÉQUIPEMENT ('equipment_form') === #}
                 {# ====================================================================== #}
                 {% elif view == 'equipment_form' %}
                 <div class="page-header-mobile-stack mb-4">
