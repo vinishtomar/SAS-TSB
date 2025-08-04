@@ -463,7 +463,7 @@
                                     {% if category_title == 'Vehicules' %}
                                     <tr><th>Immatriculation</th><th>Nom</th><th>Responsable</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
                                     {% elif category_title == 'Engins' %}
-                                    <tr><th>Nom</th><th>Type</th><th>Prochaine VGP</th><th>Fioul</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
+                                    <tr><th>Nom</th><th>Type</th><th>Photo</th><th>Prochaine VGP</th><th>Fioul</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
                                     {% else %} {# Materiels #}
                                     <tr><th>Nom</th><th>Type</th><th>N° de Série</th><th>État</th><th>Commentaire</th><th>Statut</th><th>Actions</th></tr>
                                     {% endif %}
@@ -478,6 +478,15 @@
                                         <td>{{ item.notes or '-' }}</td>
                                         <td><span class="badge bg-success">{{ item.status }}</span></td>
                                     {% elif category_title == 'Engins' %}
+                                        <td>
+                                            {% if item.photo_fuel_url %}
+                                                <a href="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" target="_blank">
+                                                    <img src="{{ url_for('uploaded_file', filename=item.photo_fuel_url) }}" alt="Photo fioul" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                                </a>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
                                         <td><strong>{{ item.name }}</strong></td>
                                         <td>{{ item.type_engin or '-' }}</td>
                                         <td>{{ item.date_vgp.strftime('%d/%m/%Y') if item.date_vgp else '-' }}</td>
@@ -523,7 +532,7 @@
                                 <div class="row"><div class="col-md-6 mb-3"><label for="date_debut_responsabilite" class="form-label">Début Responsabilité</label><input type="date" class="form-control" name="date_debut_responsabilite" value="{{ equipment.date_debut_responsabilite.strftime('%Y-%m-%d') if equipment and equipment.date_debut_responsabilite else '' }}"></div><div class="col-md-6 mb-3"><label for="date_fin_responsabilite" class="form-label">Fin Responsabilité</label><input type="date" class="form-control" name="date_fin_responsabilite" value="{{ equipment.date_fin_responsabilite.strftime('%Y-%m-%d') if equipment and equipment.date_fin_responsabilite else '' }}"></div></div>
                             {% endif %}
 
-                            {# --- FORMULAIRE POUR ENGINS --- #}
+                            {# --- FORMULAIRE DÉDIÉ POUR LES ENGINS --- #}
                             {% if preselected_category == 'Engins' or (equipment and equipment.category == 'Engins') %}
                                 <div class="row"><div class="col-md-6 mb-3"><label for="name" class="form-label">Nom de l'engin</label><input type="text" class="form-control" name="name" value="{{ equipment.name if equipment else '' }}" required></div><div class="col-md-6 mb-3"><label for="type_engin" class="form-label">Type</label><input type="text" class="form-control" name="type_engin" value="{{ equipment.type_engin if equipment else '' }}" list="engin-types" placeholder="Nacelle ciseaux..."><datalist id="engin-types"><option value="Nacelle ciseaux"><option value="Araignée"><option value="Autre"></datalist></div></div>
                                 <div class="row"><div class="col-md-6 mb-3"><label for="date_vgp" class="form-label">Prochaine VGP</label><input type="date" class="form-control" name="date_vgp" value="{{ equipment.date_vgp.strftime('%Y-%m-%d') if equipment and equipment.date_vgp else '' }}"></div><div class="col-md-6 mb-3"><label for="hauteur" class="form-label">Hauteur (m) (Optionnel)</label><input type="number" step="0.1" class="form-control" name="hauteur" value="{{ equipment.hauteur if equipment else '' }}"></div></div>
@@ -531,7 +540,17 @@
                                     <div class="col-md-6 mb-3"><label for="nombre_cles" class="form-label">Nombre de clés</label><input type="number" class="form-control" name="nombre_cles" value="{{ equipment.nombre_cles if equipment else '' }}"></div>
                                     <div class="col-md-6 mb-3"><label for="niveau_fioul" class="form-label">Niveau Fioul</label><select class="form-select" name="niveau_fioul"><option value="">-- Non spécifié --</option><option value="Plein" {% if equipment and equipment.niveau_fioul == 'Plein' %}selected{% endif %}>Plein</option><option value="3/4" {% if equipment and equipment.niveau_fioul == '3/4' %}selected{% endif %}>3/4</option><option value="1/2" {% if equipment and equipment.niveau_fioul == '1/2' %}selected{% endif %}>1/2</option><option value="1/4" {% if equipment and equipment.niveau_fioul == '1/4' %}selected{% endif %}>1/4</option><option value="Vide" {% if equipment and equipment.niveau_fioul == 'Vide' %}selected{% endif %}>Vide</option></select></div>
                                 </div>
-                                <div class="mb-3"><label for="photo_fuel_url" class="form-label">Lien vers photo du réservoir (Optionnel)</label><input type="url" class="form-control" name="photo_fuel_url" placeholder="Coller le lien de l'image ici..." value="{{ equipment.photo_fuel_url if equipment else '' }}"></div>
+                                {# ✅ REMPLACEMENT DU CHAMP URL PAR UN CHAMP FICHIER #}
+                                <div class="mb-3">
+                                    <label for="photo_fuel" class="form-label">Importer photo du réservoir</label>
+                                    <input class="form-control" type="file" id="photo_fuel" name="photo_fuel" accept="image/*">
+                                </div>
+                                {% if equipment and equipment.photo_fuel_url %}
+                                <div class="mb-3">
+                                    <small>Photo actuelle :</small><br>
+                                    <img src="{{ url_for('uploaded_file', filename=equipment.photo_fuel_url) }}" alt="Photo fioul" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 5px;">
+                                </div>
+                                {% endif %}
                             {% endif %}
 
                             {# --- FORMULAIRE POUR MATERIELS --- #}
