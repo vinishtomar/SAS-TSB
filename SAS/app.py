@@ -729,6 +729,28 @@ def edit_employee(employee_id):
         return redirect(url_for('list_employees'))
         
     return render_template('main_template.html', view='employee_form', form_title="Modifier l'Employé", employee=employee)
+@app.route('/equipment/delete/<int:equipment_id>', methods=['POST'])
+@login_required
+def delete_equipment(equipment_id):
+    if current_user.role == 'Finance':
+        abort(403)
+    
+    equip_to_delete = Equipment.query.get_or_404(equipment_id)
+    category_name = equip_to_delete.category # On sauvegarde le nom de la catégorie pour la redirection
+
+    # Si l'équipement est un engin et a une photo, on supprime le fichier image
+    if equip_to_delete.category == 'Engins' and equip_to_delete.photo_fuel_url:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], equip_to_delete.photo_fuel_url))
+        except OSError:
+            # Le fichier n'existait pas, ce n'est pas grave
+            print(f"Le fichier {equip_to_delete.photo_fuel_url} n'a pas pu être supprimé car il n'a pas été trouvé.")
+
+    db.session.delete(equip_to_delete)
+    db.session.commit()
+    
+    flash(f'{category_name.rstrip("s")} supprimé avec succès.', 'success')
+    return redirect(url_for('list_equipment_by_category', category_name=category_name))
 
 @app.route('/chantier/<int:chantier_id>')
 @login_required
